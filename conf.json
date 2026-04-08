@@ -1,0 +1,7 @@
+{
+    "botName": "MyHealthCareMateBot",
+    "token": "8792507485:AAFC1fAzuFr8zxX95K346CaMT_cUpuTrVJE",
+    "broker": "broker.hivemq.com",
+    "port": 1883,
+    "catalog_url": "http://127.0.0.1:8080"
+}

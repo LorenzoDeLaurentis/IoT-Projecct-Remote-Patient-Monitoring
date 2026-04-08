@@ -1,0 +1,833 @@
+[
+    {
+        "id": "f6f2187d.f17ca8",
+        "type": "tab",
+        "label": "Pagina di Login",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "812aeceeab20ae50",
+        "type": "tab",
+        "label": "Pagina Dottore",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "48c854e9895abc80",
+        "type": "mqtt-broker",
+        "name": "",
+        "broker": "broker.hivemq.com",
+        "port": 1883,
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": 4,
+        "keepalive": 60,
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "56556cda8fa1a52e",
+        "type": "ui-base",
+        "name": "Login",
+        "path": "/dashboard",
+        "appIcon": "",
+        "includeClientData": true,
+        "acceptsClientConfig": [
+            "ui-notification",
+            "ui-control"
+        ],
+        "showPathInSidebar": false,
+        "headerContent": "page",
+        "navigationStyle": "default",
+        "titleBarStyle": "default",
+        "showReconnectNotification": true,
+        "notificationDisplayTime": 1,
+        "showDisconnectNotification": true,
+        "allowInstall": false
+    },
+    {
+        "id": "e50a68f84d1fd009",
+        "type": "ui-theme",
+        "name": "Default Theme",
+        "colors": {
+            "surface": "#ffffff",
+            "primary": "#0094CE",
+            "bgPage": "#eeeeee",
+            "groupBg": "#ffffff",
+            "groupOutline": "#cccccc"
+        },
+        "sizes": {
+            "density": "default",
+            "pagePadding": "12px",
+            "groupGap": "12px",
+            "groupBorderRadius": "4px",
+            "widgetGap": "12px"
+        }
+    },
+    {
+        "id": "9df36dbf563b9eab",
+        "type": "ui-page",
+        "name": "Login",
+        "ui": "56556cda8fa1a52e",
+        "path": "/login",
+        "icon": "home",
+        "layout": "grid",
+        "theme": "e50a68f84d1fd009",
+        "breakpoints": [
+            {
+                "name": "Default",
+                "px": "0",
+                "cols": "3"
+            },
+            {
+                "name": "Tablet",
+                "px": "576",
+                "cols": "6"
+            },
+            {
+                "name": "Small Desktop",
+                "px": "768",
+                "cols": "9"
+            },
+            {
+                "name": "Desktop",
+                "px": "1024",
+                "cols": "12"
+            }
+        ],
+        "order": 1,
+        "className": "",
+        "visible": true,
+        "disabled": "false"
+    },
+    {
+        "id": "e3724c2a74da57e7",
+        "type": "ui-page",
+        "name": "Doctor Page",
+        "ui": "56556cda8fa1a52e",
+        "path": "/clinical_portal",
+        "icon": "home",
+        "layout": "grid",
+        "theme": "e50a68f84d1fd009",
+        "breakpoints": [
+            {
+                "name": "Default",
+                "px": "0",
+                "cols": "3"
+            },
+            {
+                "name": "Tablet",
+                "px": "576",
+                "cols": "6"
+            },
+            {
+                "name": "Small Desktop",
+                "px": "768",
+                "cols": "9"
+            },
+            {
+                "name": "Desktop",
+                "px": "1024",
+                "cols": "12"
+            }
+        ],
+        "order": 2,
+        "className": "",
+        "visible": "true",
+        "disabled": "false"
+    },
+    {
+        "id": "adf0285f8d9ebf0a",
+        "type": "ui-group",
+        "name": " Appointment Requests",
+        "page": "e3724c2a74da57e7",
+        "width": 6,
+        "height": 1,
+        "order": 1,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "55c59ee6eb8795dd",
+        "type": "ui-group",
+        "name": "Calendar",
+        "page": "e3724c2a74da57e7",
+        "width": 6,
+        "height": 1,
+        "order": 2,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "290662ea0e945b33",
+        "type": "ui-group",
+        "name": "My Patients",
+        "page": "e3724c2a74da57e7",
+        "width": 6,
+        "height": 1,
+        "order": 3,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "f70415461af5d263",
+        "type": "ui-group",
+        "name": "Doctor Login",
+        "page": "9df36dbf563b9eab",
+        "width": 6,
+        "height": 1,
+        "order": 1,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "c4717dbbc1fcaa3c",
+        "type": "ui-page",
+        "name": "Create Appointment",
+        "ui": "56556cda8fa1a52e",
+        "path": "/create",
+        "icon": "home",
+        "layout": "grid",
+        "theme": "e50a68f84d1fd009",
+        "breakpoints": [
+            {
+                "name": "Default",
+                "px": "0",
+                "cols": "3"
+            },
+            {
+                "name": "Tablet",
+                "px": "576",
+                "cols": "6"
+            },
+            {
+                "name": "Small Desktop",
+                "px": "768",
+                "cols": "9"
+            },
+            {
+                "name": "Desktop",
+                "px": "1024",
+                "cols": "12"
+            }
+        ],
+        "order": 3,
+        "className": "",
+        "visible": "true",
+        "disabled": "false"
+    },
+    {
+        "id": "8eecb131f7392e3e",
+        "type": "ui-group",
+        "name": "Create Appointment",
+        "page": "c4717dbbc1fcaa3c",
+        "width": 6,
+        "height": 1,
+        "order": 1,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "3cc11d24.ff01a2",
+        "type": "comment",
+        "z": "f6f2187d.f17ca8",
+        "name": "WARNING: please check you have started this container with a volume that is mounted to /data\\n otherwise any flow changes are lost when you redeploy or upgrade the container\\n (e.g. upgrade to a more recent node-red docker image).\\n  If you are using named volumes you can ignore this warning.\\n Double click or see info side panel to learn how to start Node-RED in Docker to save your work",
+        "info": "\nTo start docker with a bind mount volume (-v option), for example:\n\n```\ndocker run -it -p 1880:1880 -v /home/user/node_red_data:/data --name mynodered nodered/node-red\n```\n\nwhere `/home/user/node_red_data` is a directory on your host machine where you want to store your flows.\n\nIf you do not do this then you can experiment and redploy flows, but if you restart or upgrade the container the flows will be disconnected and lost. \n\nThey will still exist in a hidden data volume, which can be recovered using standard docker techniques, but that is much more complex than just starting with a named volume as described above.",
+        "x": 350,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "354f4f1f7a921310",
+        "type": "ui-form",
+        "z": "f6f2187d.f17ca8",
+        "name": "Login",
+        "group": "f70415461af5d263",
+        "label": "",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "options": [
+            {
+                "label": "username",
+                "key": "username",
+                "type": "text",
+                "required": true,
+                "rows": null
+            },
+            {
+                "label": "password",
+                "key": "password",
+                "type": "password",
+                "required": true,
+                "rows": null
+            }
+        ],
+        "formValue": {
+            "username": "",
+            "password": ""
+        },
+        "payload": "",
+        "submit": "submit",
+        "cancel": "clear",
+        "resetOnSubmit": true,
+        "topic": "topic",
+        "topicType": "msg",
+        "splitLayout": "",
+        "className": "",
+        "passthru": false,
+        "dropdownOptions": [],
+        "x": 1310,
+        "y": 140,
+        "wires": [
+            [
+                "56642648f0a8b4ac"
+            ]
+        ]
+    },
+    {
+        "id": "46c63957384e033e",
+        "type": "change",
+        "z": "f6f2187d.f17ca8",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "{\"page\":\"Doctor Page\"}",
+                "tot": "json"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1620,
+        "y": 140,
+        "wires": [
+            [
+                "e7e48f70c90f9282"
+            ]
+        ]
+    },
+    {
+        "id": "56642648f0a8b4ac",
+        "type": "switch",
+        "z": "f6f2187d.f17ca8",
+        "name": "",
+        "property": "payload",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "jsonata_exp",
+                "v": "payload.username = 'admin' and payload.password = 'admin'",
+                "vt": "jsonata"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 1450,
+        "y": 140,
+        "wires": [
+            [
+                "46c63957384e033e"
+            ]
+        ]
+    },
+    {
+        "id": "e7e48f70c90f9282",
+        "type": "ui-control",
+        "z": "f6f2187d.f17ca8",
+        "name": "",
+        "ui": "56556cda8fa1a52e",
+        "events": "change",
+        "x": 1800,
+        "y": 140,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "0089b8abab569708",
+        "type": "http request",
+        "z": "812aeceeab20ae50",
+        "name": "",
+        "method": "GET",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "http://host.docker.internal:8080/get_pending_requests",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 310,
+        "y": 140,
+        "wires": [
+            [
+                "6e83709bcce9f215"
+            ]
+        ]
+    },
+    {
+        "id": "6e83709bcce9f215",
+        "type": "ui-table",
+        "z": "812aeceeab20ae50",
+        "group": "adf0285f8d9ebf0a",
+        "name": "Requests",
+        "label": "",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "maxrows": 0,
+        "passthru": false,
+        "autocols": false,
+        "showSearch": true,
+        "deselect": true,
+        "selectionType": "click",
+        "columns": [
+            {
+                "title": "Patient Name",
+                "key": "name",
+                "keyType": "key",
+                "type": "text",
+                "width": "",
+                "align": "start"
+            },
+            {
+                "title": "Reason of request",
+                "key": "reason",
+                "keyType": "key",
+                "type": "text",
+                "width": "",
+                "align": "start"
+            }
+        ],
+        "mobileBreakpoint": "sm",
+        "mobileBreakpointType": "defaults",
+        "action": "replace",
+        "className": "",
+        "x": 500,
+        "y": 140,
+        "wires": [
+            [
+                "5c0286f11d7e482a"
+            ]
+        ]
+    },
+    {
+        "id": "5c0286f11d7e482a",
+        "type": "change",
+        "z": "812aeceeab20ae50",
+        "name": "Salvare chatID",
+        "rules": [
+            {
+                "t": "set",
+                "p": "selectedChatID",
+                "pt": "flow",
+                "to": "payload.chatID",
+                "tot": "msg"
+            },
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "{\"page\": \"Create Appointment\"}",
+                "tot": "json"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 720,
+        "y": 140,
+        "wires": [
+            [
+                "a0bf8dbaa8bdc70a"
+            ]
+        ]
+    },
+    {
+        "id": "527df44b7ef57e6a",
+        "type": "ui-form",
+        "z": "812aeceeab20ae50",
+        "name": "Impost date and Time",
+        "group": "8eecb131f7392e3e",
+        "label": "Select date and time of the appointment",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "options": [
+            {
+                "label": "Date",
+                "key": "date",
+                "type": "date",
+                "required": true,
+                "rows": null
+            },
+            {
+                "label": "Time",
+                "key": "time",
+                "type": "time",
+                "required": true,
+                "rows": null
+            }
+        ],
+        "formValue": {
+            "date": "",
+            "time": ""
+        },
+        "payload": "",
+        "submit": "submit",
+        "cancel": "clear",
+        "resetOnSubmit": true,
+        "topic": "topic",
+        "topicType": "msg",
+        "splitLayout": true,
+        "className": "",
+        "passthru": false,
+        "dropdownOptions": [],
+        "x": 1120,
+        "y": 120,
+        "wires": [
+            [
+                "86ed4eddfa5f16e8",
+                "2b971d28916f7add"
+            ]
+        ]
+    },
+    {
+        "id": "3442df54f6293fac",
+        "type": "http request",
+        "z": "812aeceeab20ae50",
+        "name": "",
+        "method": "GET",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "http://host.docker.internal:8080/get_all_patients",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 310,
+        "y": 360,
+        "wires": [
+            [
+                "c1b0a39717754681"
+            ]
+        ]
+    },
+    {
+        "id": "c1b0a39717754681",
+        "type": "ui-table",
+        "z": "812aeceeab20ae50",
+        "group": "290662ea0e945b33",
+        "name": "All Patients",
+        "label": "",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "maxrows": 0,
+        "passthru": false,
+        "autocols": false,
+        "showSearch": true,
+        "deselect": true,
+        "selectionType": "none",
+        "columns": [
+            {
+                "title": "Patient Name",
+                "key": "name",
+                "keyType": "key",
+                "type": "text",
+                "width": "",
+                "align": "start"
+            },
+            {
+                "title": "SensorID",
+                "key": "sensorID",
+                "keyType": "key",
+                "type": "text",
+                "width": "",
+                "align": "start"
+            },
+            {
+                "title": "Birthday",
+                "key": "birthdate",
+                "keyType": "key",
+                "type": "text",
+                "width": "",
+                "align": "start"
+            }
+        ],
+        "mobileBreakpoint": "sm",
+        "mobileBreakpointType": "defaults",
+        "action": "replace",
+        "className": "",
+        "x": 510,
+        "y": 360,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "9bf9656f051db52f",
+        "type": "inject",
+        "z": "812aeceeab20ae50",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "5",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 170,
+        "y": 220,
+        "wires": [
+            [
+                "0089b8abab569708",
+                "0baa41a928817cbd",
+                "3442df54f6293fac"
+            ]
+        ]
+    },
+    {
+        "id": "a0bf8dbaa8bdc70a",
+        "type": "ui-control",
+        "z": "812aeceeab20ae50",
+        "name": "Go to nex page",
+        "ui": "56556cda8fa1a52e",
+        "events": "change",
+        "x": 900,
+        "y": 100,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "86ed4eddfa5f16e8",
+        "type": "function",
+        "z": "812aeceeab20ae50",
+        "name": "sending the payload",
+        "func": "let chatID = flow.get(\"selectedChatID\");\nmsg.payload.chatID = chatID;\nmsg.payload.status = \"confirmed\";\n\nmsg.topic = `clinician/patient/${chatID}/appointments/confirmation`;\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1380,
+        "y": 120,
+        "wires": [
+            [
+                "4f6a54f18a8a8a46"
+            ]
+        ]
+    },
+    {
+        "id": "4f6a54f18a8a8a46",
+        "type": "mqtt out",
+        "z": "812aeceeab20ae50",
+        "name": "",
+        "topic": "clinician/patient/{chatID}/appointments/confirmation",
+        "qos": "2",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "48c854e9895abc80",
+        "x": 1810,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "0baa41a928817cbd",
+        "type": "http request",
+        "z": "812aeceeab20ae50",
+        "name": "",
+        "method": "GET",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "http://host.docker.internal:8080/get_confirmed_appointments",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 510,
+        "y": 260,
+        "wires": [
+            [
+                "164054c898e96b76"
+            ]
+        ]
+    },
+    {
+        "id": "164054c898e96b76",
+        "type": "ui-table",
+        "z": "812aeceeab20ae50",
+        "group": "55c59ee6eb8795dd",
+        "name": "Calendar",
+        "label": "",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "maxrows": 0,
+        "passthru": false,
+        "autocols": false,
+        "showSearch": true,
+        "deselect": true,
+        "selectionType": "none",
+        "columns": [
+            {
+                "title": "Date",
+                "key": "date",
+                "keyType": "key",
+                "type": "text",
+                "width": "",
+                "align": "start"
+            },
+            {
+                "title": "Time",
+                "key": "time",
+                "keyType": "key",
+                "type": "text",
+                "width": "",
+                "align": "start"
+            },
+            {
+                "title": "Patient Name",
+                "key": "name",
+                "keyType": "key",
+                "type": "text",
+                "width": "",
+                "align": "start"
+            }
+        ],
+        "mobileBreakpoint": "sm",
+        "mobileBreakpointType": "defaults",
+        "action": "replace",
+        "className": "",
+        "x": 700,
+        "y": 260,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "50616cf62f7e93be",
+        "type": "ui-control",
+        "z": "812aeceeab20ae50",
+        "name": "Go to nex page",
+        "ui": "56556cda8fa1a52e",
+        "events": "change",
+        "x": 1460,
+        "y": 200,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "cdce9d5a575c1835",
+        "type": "comment",
+        "z": "812aeceeab20ae50",
+        "name": "",
+        "info": "Quando si imposta data e ora inserire \nanche il nome del paziente per cui lo \nsi sta facendo e la visualizzazione del \ncalendario",
+        "x": 1100,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "2b971d28916f7add",
+        "type": "change",
+        "z": "812aeceeab20ae50",
+        "name": "next page",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "{\"page\": \"Doctor Page\"}",
+                "tot": "json"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1240,
+        "y": 200,
+        "wires": [
+            [
+                "50616cf62f7e93be"
+            ]
+        ]
+    },
+    {
+        "id": "8629a1022d903b28",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "@flowfuse/node-red-dashboard": "1.30.2"
+        }
+    }
+]

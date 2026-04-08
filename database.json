@@ -1,0 +1,59 @@
+{
+    "patients": [
+        {
+            "chatID": 1289459725,
+            "name": "Diana Giulia Cheban",
+            "birthdate": "24/08/2003",
+            "doctor": "Luca Bianco",
+            "sensorID": "sensor2594",
+            "reminders": [
+                {
+                    "medicine_name": "prova1",
+                    "time": "19;53"
+                },
+                {
+                    "medicine_name": "prova2",
+                    "time": "19:55"
+                },
+                {
+                    "medicine_name": "prova3",
+                    "time": "20:27"
+                }
+            ],
+            "appointments": [
+                {
+                    "date": "2026-04-22",
+                    "reason": "male",
+                    "time": "19:32",
+                    "status": "confirmed"
+                },
+                {
+                    "date": "2026-04-17",
+                    "reason": "male",
+                    "time": "21:27",
+                    "status": "confirmed"
+                },
+                {
+                    "date": "TBD",
+                    "reason": "prova4",
+                    "time": "TBD",
+                    "status": "pending"
+                }
+            ]
+        },
+        {
+            "chatID": 5673925451,
+            "name": "matteo costamagna",
+            "birthdate": "20062003",
+            "doctor": "diana cheban",
+            "sensorID": "sensor1"
+        },
+        {
+            "chatID": 6596242418,
+            "name": "Giovanni Giordano",
+            "birthdate": "05/12/2000",
+            "doctor": "Diana White",
+            "sensorID": "Sensor05"
+        }
+    ]
+}

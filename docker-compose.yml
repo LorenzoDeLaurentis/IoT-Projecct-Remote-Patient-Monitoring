@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  node-red:
+    image: nodered/node-red:latest
+    container_name: clinician-portal
+    ports:
+      - "1880:1880"
+    volumes:
+      - node_red_data:/data
+    restart: unless-stopped
+
+volumes:
+  node_red_data:
+    external: true
