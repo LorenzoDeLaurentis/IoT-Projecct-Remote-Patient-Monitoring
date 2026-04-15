@@ -6,27 +6,24 @@ def simulate_temp(is_fever=False):
     """
     Simulation of body temperature based on the current time.
     """
-    # 1. Retrieving the current time
+    # Retrieving the current time
     now = datetime.now()
     current_hour = now.hour + now.minute / 60.0 #convert time to decimal, like 14.5 for 14:30
     
-    # 2. Circadian model: Average 36.6°C, oscillations of 0.5°C
+    # Circadian model: Average 36.6°C, oscillations of 0.5°C
     # The temperature peaks around 18:00 and is lowest around 6:00 
     #sin has a period of 2pi, diving by 12 gives us a 24-hour cycle, -12 used to shift the peak to 18:00 instead of 12:00
     base_temp = 36.6 + 0.5 * np.sin((current_hour - 12) * np.pi / 12)
 
-    # 3. Adding some Gaussian Noise, due to the sensor - mean 0, standard deviation 0.05)
+    # Adding some Gaussian Noise, due to the sensor - mean 0, standard deviation 0.05)
     noise = np.random.normal(0, 0.05) 
     
-    # 4. Fever simulation: If fever is active, add a fixed offset - e.g., +2 degrees
+    # Fever simulation: If fever is active, add a fixed offset - e.g., +2 degrees
     fever_offset = np.random.normal(2, 0.3)  if is_fever else 0.0
 
     #Rounding to 2 decimal places to simulate typical sensor output
     return round(base_temp + noise + fever_offset, 2)
 
-# Example usage: Simulate continuous sensor readings every second
-print("-- Starting simulated temperature sensor readings --")
-print("Ctrl + C to stop.\n")
 
 def simulate_heart_rate(temp, high_hr_signal=False):
     #MAYBE A VARIABLE WITHE THE GENERAL STATUS OF THE PATIENT, LIKE STRESS LEVEL, ACTIVITY LEVEL, OR FEVER STATUS, TO INFLUENCE THE HEART RATE SIMULATION
@@ -56,16 +53,25 @@ def simulate_heart_rate(temp, high_hr_signal=False):
 
     return round(heart_rate)
 
-""" 
-def simulate_blood_pressure():
-    # Simulate blood pressure with a normal range of around 120/80 mmHg, with some random fluctuations
-    systolic = np.random.normal(120, 10)  # Average systolic pressure with some variability
-    diastolic = np.random.normal(80, 5)    # Average diastolic pressure with some variability
-    return round(systolic), round(diastolic) """
+
+def simulate_blood_pressure(heart_rate, high_hr_signal=False):
+    # We have to use the HR as an input
+    HR_baseline = 72
+    sys_noise = np.random.normal(0, 3)
+    dia_noise = np.random.normal(0, 2)
+    base_sys = 120
+    
+    if high_hr_signal:
+        base_sys += 15  # Pressure raises if HR is high
+        
+    SYS = base_sys + (K*(heart_rate - HR_baseline)) + sys_noise 
+    DIA = (SYS*0.67) + dia_noise
+
+    return round(SYS), round(DIA)
 
 
 if __name__ == "__main__":
-    global patient_stress_level
+    #global patient_stress_level
 
     patient_temp_baseline = 36.6
     patient_temp_baseline = 72 + np.random.normal(0, 3) # Baseline heart rate with some variability, around 73 bpm
@@ -74,10 +80,12 @@ if __name__ == "__main__":
         fever_mode = False
         counter = 0
         fever_cnt= 0
-        cnt_hr = 0
-        stop = 0
+        K = 0.5
 
-        while stop < 2:
+        print("-- Starting simulated sensor readings --")
+        print("Ctrl + C to stop.\n")
+
+        while True:
             # Every 10 readings, we activate the fever mode to simulate a febrile state
             
             if counter < 15:
@@ -91,16 +99,15 @@ if __name__ == "__main__":
                 fever_mode = False
                 counter = 0
                 fever_cnt = 0
-                stop += 1
 
             high_hr_signal = True if counter % 10 == 0 else False
             if high_hr_signal: print("[TEST] Injecting High HR Signal...")
 
-            temp = simulate_temp(is_fever=fever_mode)
-            freq= simulate_heart_rate(temp, high_hr_signal)
             timestamp = datetime.now().strftime("%H:%M:%S") #strftime to format the timestamp as HH:MM:SS
-            
-            print(f"[{timestamp}] Sensor lecture: {temp} °C, Heart Rate: {freq} bpm")
+            temperature = simulate_temp(is_fever=fever_mode)
+            heart_rate = simulate_heart_rate(temperature, high_hr_signal)
+            sys, dia = simulate_blood_pressure(heart_rate, high_hr_signal)
+            print(f"[{timestamp}] Sensor lecture: {temperature} °C, Heart Rate: {heart_rate} bpm, Blood Pressure: {sys} / {dia} mmHg")
             
             # Waitinf 1 sec before the next reading
             time.sleep(1)
