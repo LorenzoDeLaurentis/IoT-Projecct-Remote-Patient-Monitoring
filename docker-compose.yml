@@ -10,6 +10,54 @@ services:
       - node_red_data:/data
     restart: unless-stopped
 
+  catalog:
+    build: .
+    command: python Catalog_Telegram.py
+    container_name: catalog
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+
+  telegram-bot:
+    build: .
+    command: python patient_controll_telegram.py
+    container_name: telegram-bot
+    depends_on:
+      - catalog
+    restart: unless-stopped
+
+  dataprocessor:
+    build: .
+    command: python dataprocessor.py
+    container_name: dataprocessor
+    depends_on:
+      - catalog
+    restart: unless-stopped
+
+  timeseries-adaptor:
+    build: .
+    command: python timeseries_adaptor.py
+    container_name: timeseries-adaptor
+    depends_on:
+      - catalog
+    restart: unless-stopped
+
+  data-generator:
+    build: .
+    command: python Data_generator.py
+    container_name: data-generator
+    depends_on:
+      - catalog
+    restart: unless-stopped
+
+  reminder:
+    build: .
+    command: python reminder.py
+    container_name: reminder
+    depends_on:
+      - catalog
+    restart: unless-stopped
+
 volumes:
   node_red_data:
     external: true

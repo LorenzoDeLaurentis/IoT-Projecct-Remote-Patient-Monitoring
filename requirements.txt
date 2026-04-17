@@ -1,0 +1,6 @@
+cherrypy
+telepot
+paho-mqtt
+flask
+requests
+numpy
