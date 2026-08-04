@@ -107,37 +107,3 @@ def get_appointments():
 # Starts the local development server. Setting debug=True means the server will automatically restart whenever you save changes to your code, and it will show detailed error messages if something goes wrong.
 if __name__ == "__main__":
     app.run(debug=True)
-
-
-'''
-
-app = Flask(__name__)
-DATABASE_FILE = "database.json"
-
-@app.route('/')
-def index():
-    return render_template('calendar.html')
-
-@app.route('/api/appointments', methods=['GET'])
-def get_appointments():
-    try:
-        with open(DATABASE_FILE, "r") as f:
-            data = json.load(f)
-        
-        all_appointments = []
-        for patient in data.get("patients", []):
-            for appt in patient.get("appointments", []):
-                # Format data for the frontend calendar
-                all_appointments.append({
-                    "title": f"Dr. {appt.get('doctor')} ({appt.get('reason')})",
-                    "date": appt.get("date"), # Format should be YYYY-MM-DD for standard calendars
-                    "time": appt.get("time")
-                })
-        return jsonify(all_appointments)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-if __name__ == '__main__':
-    app.run(debug=True, port=5000)  
-
-'''
