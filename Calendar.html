@@ -1,0 +1,74 @@
+<!-- CALENDAR TEMPLATE -->
+
+
+
+<!-- CALENDAR TEMPLATE -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Appointment Calendar</title>
+    <!-- Include FullCalendar CSS and JS from CDN -->
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+        }
+        #calendar {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>My Appointments Calendar</h2>
+    <div id='calendar'></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendar');
+            
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                // Switches from a flat monthly box grid to the hourly weekly column view seen in the image
+                initialView: 'dayGridWeek', 
+
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'timeGridWeek,timeGridDay,dayGridMonth'
+                },
+                events: '/appointments', // Automatically pulls from your Flask route
+                
+                // Add this block to remove the 'a/p' marker and use 24-hour format
+                eventTimeFormat: {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false
+                },
+
+                // Triggers when you click on any appointment block
+                eventClick: function(info){
+                    // 'info.event.extendedProps' contains all your custom fields from Python!
+                    var details = info.event.extendedProps;
+
+                    var message = "APPOINTMENT DETAILS: \n" + 
+                    "----------------------------------\n" +
+                    "Patient: " + details.patient_name +"\n" +
+                    "Doctor: " + details.doctor + "\n" + 
+                    "Reason: " + details.reason + "\n" +
+                    "Date: " + details.date + "\n" +
+                    "Time: " + details.time;
+                    
+                    alert(message);
+                }
+
+            });
+            
+            calendar.render();
+        });
+    </script>
+
+</body>
+</html>
