@@ -1,4 +1,17 @@
 {
+    "config": {
+        "mqtt": {
+            "broker_host": "message_broker", 
+            "broker_port": 1883,
+            "topics": {
+                "sensors": "iothealth/+/sensors",
+                "alerts": "iothealth/+/alerts",
+                "reminders": "iothealth/+/reminders"
+            }
+        }
+    },
+
+
     "patients": [
         {
             "chatID": 1289459725,
@@ -8,36 +21,44 @@
             "sensorID": "sensor2594",
             "reminders": [
                 {
-                    "medicine_name": "prova1",
-                    "time": "19;53"
-                },
-                {
                     "medicine_name": "prova2",
-                    "time": "19:55"
+                    "time": "11:10"
                 },
                 {
                     "medicine_name": "prova3",
-                    "time": "20:27"
+                    "time": "11:09"
                 }
             ],
             "appointments": [
                 {
-                    "date": "2026-04-22",
+                    "date": "25-07-2026",
                     "reason": "male",
-                    "time": "19:32",
+                    "time": "18:30",
                     "status": "confirmed"
                 },
                 {
-                    "date": "2026-04-17",
+                    "date": "25-07-2026",
                     "reason": "male",
-                    "time": "21:27",
+                    "time": "18:30",
                     "status": "confirmed"
                 },
                 {
-                    "date": "TBD",
-                    "reason": "prova4",
-                    "time": "TBD",
+                    "date": "03-08-2026",
+                    "reason": "mal di testa",
+                    "time": "11:16",
+                    "status": "URGENTE"
+                },
+                {
+                    "date": "26-07-2026",
+                    "reason": "headache",
+                    "time": "11:10",
                     "status": "pending"
+                },
+                {
+                    "date": "26-07-2026",
+                    "reason": "headache",
+                    "time": "11:10",
+                    "status": "confirmed"
                 }
             ]
         },
@@ -54,6 +75,246 @@
             "birthdate": "05/12/2000",
             "doctor": "Diana White",
             "sensorID": "Sensor05"
+        },
+        {
+            "chatID": 9988776655,
+            "name": "Mario Rossi",
+            "birthdate": "12/05/1990",
+            "doctor": "Luca Bianco",
+            "sensorID": "sensor99",
+            "thresholds": {
+                "heart_rate": {
+                    "min": 60,
+                    "max": 100
+                },
+                "body_temperature": {
+                    "min": 35.5,
+                    "max": 37.5
+                },
+                "blood_pressure_systolic": {
+                    "min": 90,
+                    "max": 130
+                },
+                "blood_pressure_diastolic": {
+                    "min": 60,
+                    "max": 85
+                }
+            },
+            "reminders": [],
+            "appointments": [
+                {
+                    "date": "26-07-2026",
+                    "reason": "Routine checkup",
+                    "time": "11:10",
+                    "status": "confirmed"
+                }
+            ]
+        },
+        {
+            "chatID": 9988776655,
+            "name": "Mario Rossi",
+            "birthdate": "1985-05-12",
+            "doctor": "Dr. Smith",
+            "sensorID": "sensor_01",
+            "thresholds": {
+                "heart_rate": {
+                    "min": 60,
+                    "max": 100
+                },
+                "body_temperature": {
+                    "min": 36.0,
+                    "max": 37.5
+                },
+                "blood_pressure_systolic": {
+                    "min": 90,
+                    "max": 140
+                },
+                "blood_pressure_diastolic": {
+                    "min": 60,
+                    "max": 90
+                }
+            },
+            "reminders": [],
+            "appointments": []
+        },
+        {
+            "chatID": 123456789,
+            "name": "Mario Bianchi",
+            "birthdate": "1985-05-12",
+            "doctor": "Dr. Smith",
+            "sensorID": "sensor_01",
+            "thresholds": {
+                "heart_rate": {
+                    "min": 60,
+                    "max": 100
+                },
+                "body_temperature": {
+                    "min": 36.0,
+                    "max": 37.5
+                },
+                "blood_pressure_systolic": {
+                    "min": 90,
+                    "max": 140
+                },
+                "blood_pressure_diastolic": {
+                    "min": 60,
+                    "max": 90
+                }
+            },
+            "reminders": [],
+            "appointments": []
+        },
+        {
+            "chatID": 225987647,
+            "name": "Lucia Rossi",
+            "birthdate": "1990-06-3",
+            "doctor": "Dr. Smith",
+            "sensorID": "sensor_02",
+            "thresholds": {
+                "heart_rate": {
+                    "min": 60,
+                    "max": 100
+                },
+                "body_temperature": {
+                    "min": 36.0,
+                    "max": 37.5
+                },
+                "blood_pressure_systolic": {
+                    "min": 90,
+                    "max": 140
+                },
+                "blood_pressure_diastolic": {
+                    "min": 60,
+                    "max": 90
+                }
+            },
+            "reminders": [],
+            "appointments": []
+        },
+        {
+            "chatID": 999999999,
+            "name": "Pluto",
+            "birthdate": "ieri",
+            "doctor": "pippo",
+            "sensorID": "sensor_PL",
+            "thresholds": {
+                "heart_rate": {
+                    "min": 60,
+                    "max": 100
+                },
+                "body_temperature": {
+                    "min": 36.0,
+                    "max": 37.5
+                },
+                "blood_pressure_systolic": {
+                    "min": 90,
+                    "max": 140
+                },
+                "blood_pressure_diastolic": {
+                    "min": 60,
+                    "max": 90
+                }
+            },
+            "reminders": [],
+            "appointments": []
+        },
+        {
+            "chatID": 1111111111,
+            "name": "Donald Duck",
+            "birthdate": "1939, LA",
+            "doctor": "Dr. Mouse",
+            "sensorID": "N/A",
+            "thresholds": {
+                "heart_rate": {
+                    "min": 60,
+                    "max": 100
+                },
+                "body_temperature": {
+                    "min": 36.0,
+                    "max": 37.5
+                },
+                "blood_pressure_systolic": {
+                    "min": 90,
+                    "max": 140
+                },
+                "blood_pressure_diastolic": {
+                    "min": 60,
+                    "max": 90
+                }
+            },
+            "reminders": [
+                {
+                    "medicine_name": "paperite",
+                    "time": "11:15",
+                    "chatID": 1111111111
+                },
+                {
+                    "medicine_name": "paperite",
+                    "time": "11:15",
+                    "chatID": 1111111111
+                },
+                {
+                    "medicine_name": "paperite",
+                    "time": "11:15",
+                    "chatID": 1111111111
+                },
+                {
+                    "medicine_name": "super_papero",
+                    "time": "9:00"
+                },
+                {
+                    "medicine_name": "Paperinik",
+                    "time": "15:40"
+                }
+            ],
+            "appointments": [
+                {
+                    "date": "26-07-2026",
+                    "reason": "Logopedia",
+                    "time": "11:20",
+                    "status": "to be confirmed"
+                }
+            ]
+        },
+        {
+            "chatID": 3366998855,
+            "name": "Pippo",
+            "birthdate": "1939",
+            "doctor": "Topolino",
+            "sensorID": "sensor_Bau",
+            "thresholds": {
+                "heart_rate": {
+                    "min": 60,
+                    "max": 100
+                },
+                "body_temperature": {
+                    "min": 36.0,
+                    "max": 37.5
+                },
+                "blood_pressure_systolic": {
+                    "min": 90,
+                    "max": 140
+                },
+                "blood_pressure_diastolic": {
+                    "min": 60,
+                    "max": 90
+                }
+            },
+            "reminders": [
+                {
+                    "medicine_name": "sonnifero",
+                    "time": "15:35"
+                },
+                {
+                    "medicine_name": "vitamine",
+                    "time": "15:10"
+                },
+                {
+                    "medicine_name": "tachipirina",
+                    "time": "11:17"
+                }
+            ],
+            "appointments": []
         }
     ]
 }
