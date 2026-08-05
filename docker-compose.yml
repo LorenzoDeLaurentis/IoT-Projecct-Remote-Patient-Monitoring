@@ -1,6 +1,15 @@
 version: '3.8'
 
 services:
+  mqtt-broker:
+    image: eclipse-mosquitto:latest
+    container_name: message_broker
+    ports:
+      - "1883:1883"
+    volumes:
+      - mosquitto_data:/mosquitto/data
+    restart: unless-stopped
+    
   node-red:
     image: nodered/node-red:latest
     container_name: clinician-portal
@@ -52,12 +61,21 @@ services:
 
   reminder:
     build: .
-    command: python reminder.py
+    command: python time_based_alert.py
     container_name: reminder
+    depends_on:
+      - catalog
+    restart: unless-stopped
+
+  vital-sign-alert:
+    build: .
+    command: python vital_sign_alert.py
+    container_name: vital-sign-alert
     depends_on:
       - catalog
     restart: unless-stopped
 
 volumes:
   node_red_data:
+  mosquitto_data:
     external: true
