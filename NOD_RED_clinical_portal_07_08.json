@@ -1,0 +1,125 @@
+[
+    {
+        "id": "fd495f4ebdc0f192",
+        "type": "ui-template",
+        "z": "98eab5396367cef7",
+        "group": "a6b3668000f863cc",
+        "page": "",
+        "ui": "",
+        "name": "Live Calendar",
+        "order": 1,
+        "width": "6",
+        "height": "13",
+        "head": "",
+        "format": "<div style=\"width: 100%; height: 600px; margin: 0 auto;\">\n    <div id='dashboard-calendar' style=\"height: 100%;\"></div>\n</div>\n\n<!-- Load FullCalendar from CDN -->\n<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>\n\n<script>\n    (function() {\n        setTimeout(function() {\n            var calendarEl = document.getElementById('dashboard-calendar');\n            if (calendarEl && !calendarEl.classList.contains('fc')) {\n                var calendar = new FullCalendar.Calendar(calendarEl, {\n                    initialView: 'dayGridMonth',\n                    height: '100%',\n                    headerToolbar: {\n                        left: 'prev,next today',\n                        center: 'title',\n                        right: 'dayGridWeek,dayGridMonth'\n                    },\n                    events: [], // Starts empty, populated dynamically by Node-RED messages\n                    eventTimeFormat: {\n                        hour: '2-digit',\n                        minute: '2-digit',\n                        hour12: false\n                    },\n                    eventClick: function(info) {\n                        var details = info.event.extendedProps;\n                        var message = \"APPOINTMENT DETAILS:\\n\" +\n                                      \"----------------------------------\\n\" +\n                                      \"Patient: \" + details.patient_name + \"\\n\" +\n                                      \"Doctor: \" + details.doctor + \"\\n\" +\n                                      \"Reason: \" + details.reason + \"\\n\" +\n                                      \"Date: \" + details.date + \"\\n\" +\n                                      \"Time: \" + details.time;\n                        alert(message);\n                    }\n                });\n                calendar.render();\n\n                // Listen for incoming messages from Node-RED (HTTP Request payload)\n                scope.$watch('msg', function(msg) {\n                    if (msg && msg.payload) {\n                        // Clear old events and load the new appointment array from database\n                        calendar.removeAllEvents();\n                        var eventsToAdd = Array.isArray(msg.payload) ? msg.payload : [msg.payload];\n                        eventsToAdd.forEach(function(ev) {\n                            calendar.addEvent(ev);\n                        });\n                    }\n                });\n            }\n        }, 300);\n    })();\n</script>",
+        "storeOutMessages": true,
+        "passthru": true,
+        "resendOnRefresh": true,
+        "templateScope": "local",
+        "className": "",
+        "x": 720,
+        "y": 260,
+        "wires": [
+            [
+                "fe319678779829c9"
+            ]
+        ]
+    },
+    {
+        "id": "a6b3668000f863cc",
+        "type": "ui-group",
+        "name": "Calendar",
+        "page": "f88ef76f95dd78ee",
+        "width": 6,
+        "height": 1,
+        "order": 2,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "f88ef76f95dd78ee",
+        "type": "ui-page",
+        "name": "Doctor Page",
+        "ui": "56556cda8fa1a52e",
+        "path": "/clinical_portal",
+        "icon": "home",
+        "layout": "grid",
+        "theme": "e50a68f84d1fd009",
+        "breakpoints": [
+            {
+                "name": "Default",
+                "px": "0",
+                "cols": "3"
+            },
+            {
+                "name": "Tablet",
+                "px": "576",
+                "cols": "6"
+            },
+            {
+                "name": "Small Desktop",
+                "px": "768",
+                "cols": "9"
+            },
+            {
+                "name": "Desktop",
+                "px": "1024",
+                "cols": "12"
+            }
+        ],
+        "order": 2,
+        "className": "",
+        "visible": false,
+        "disabled": "false"
+    },
+    {
+        "id": "56556cda8fa1a52e",
+        "type": "ui-base",
+        "name": "Clinician Portal - Health Care Mate",
+        "path": "/dashboard",
+        "appIcon": "",
+        "includeClientData": true,
+        "acceptsClientConfig": [
+            "ui-notification",
+            "ui-control"
+        ],
+        "showPathInSidebar": false,
+        "headerContent": "page",
+        "navigationStyle": "default",
+        "titleBarStyle": "default",
+        "showReconnectNotification": true,
+        "notificationDisplayTime": 1,
+        "showDisconnectNotification": true,
+        "allowInstall": false
+    },
+    {
+        "id": "e50a68f84d1fd009",
+        "type": "ui-theme",
+        "name": "Clinician Portal - Health Care Mate",
+        "colors": {
+            "surface": "#ffffff",
+            "primary": "#a0eec2",
+            "bgPage": "#aadaf8",
+            "groupBg": "#ffffff",
+            "groupOutline": "#cccccc"
+        },
+        "sizes": {
+            "density": "default",
+            "pagePadding": "12px",
+            "groupGap": "12px",
+            "groupBorderRadius": "4px",
+            "widgetGap": "12px"
+        }
+    },
+    {
+        "id": "67e88ee4a4ebc1a6",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "@flowfuse/node-red-dashboard": "1.30.2"
+        }
+    }
+]
