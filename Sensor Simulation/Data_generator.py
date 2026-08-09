@@ -25,7 +25,7 @@ def simulate_temp(is_fever=False):
     return round(base_temp + noise + fever_offset, 2)
 
 
-def simulate_heart_rate(temp, high_hr_signal=False):
+def simulate_heart_rate(temp, high_hr_signal=False, fever_mode=False, patient_temp_baseline=72):
     #MAYBE A VARIABLE WITHE THE GENERAL STATUS OF THE PATIENT, LIKE STRESS LEVEL, ACTIVITY LEVEL, OR FEVER STATUS, TO INFLUENCE THE HEART RATE SIMULATION
 
     # Simulate heart rate with a normal resting range of 60-100 bpm, with some random fluctuations
@@ -54,7 +54,7 @@ def simulate_heart_rate(temp, high_hr_signal=False):
     return round(heart_rate)
 
 
-def simulate_blood_pressure(heart_rate, high_hr_signal=False):
+def simulate_blood_pressure(heart_rate, high_hr_signal=False, K=0.5):
     # We have to use the HR as an input
     HR_baseline = 72
     sys_noise = np.random.normal(0, 3)
@@ -73,7 +73,6 @@ def simulate_blood_pressure(heart_rate, high_hr_signal=False):
 if __name__ == "__main__":
     #global patient_stress_level
 
-    patient_temp_baseline = 36.6
     patient_temp_baseline = 72 + np.random.normal(0, 3) # Baseline heart rate with some variability, around 73 bpm
 
     try:
@@ -105,8 +104,8 @@ if __name__ == "__main__":
 
             timestamp = datetime.now().strftime("%H:%M:%S") #strftime to format the timestamp as HH:MM:SS
             temperature = simulate_temp(is_fever=fever_mode)
-            heart_rate = simulate_heart_rate(temperature, high_hr_signal)
-            sys, dia = simulate_blood_pressure(heart_rate, high_hr_signal)
+            heart_rate = simulate_heart_rate(temperature, high_hr_signal, fever_mode, patient_temp_baseline)
+            sys, dia = simulate_blood_pressure(heart_rate, high_hr_signal, K)
             print(f"[{timestamp}] Sensor lecture: {temperature} °C, Heart Rate: {heart_rate} bpm, Blood Pressure: {sys} / {dia} mmHg")
             
             # Waitinf 1 sec before the next reading
