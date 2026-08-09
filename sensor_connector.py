@@ -161,7 +161,10 @@ def fetch_known_patients(catalog_url: str) -> list[str] | None:
             resp = requests.get(f"{catalog_url}/get_all_patients", timeout=5)
             resp.raise_for_status()
             patients = resp.json()
-            return [p["sensorID"] for p in patients if p.get("sensorID")]
+            return [
+                p["sensorID"] for p in patients
+                if p.get("sensorID") and p["sensorID"].strip().upper() != "N/A"
+            ]
         except Exception as exc:
             log.warning("Catalog not ready (attempt %d/10): %s", attempt + 1, exc)
             time.sleep(3)

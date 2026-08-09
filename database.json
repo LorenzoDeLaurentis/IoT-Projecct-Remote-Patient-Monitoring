@@ -142,7 +142,7 @@
             "name": "Mario Bianchi",
             "birthdate": "1985-05-12",
             "doctor": "Dr. Smith",
-            "sensorID": "sensor_01",
+            "sensorID": "sensor_03",
             "thresholds": {
                 "heart_rate": {
                     "min": 60,
