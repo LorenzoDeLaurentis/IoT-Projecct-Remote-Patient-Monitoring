@@ -70,6 +70,51 @@ def simulate_blood_pressure(heart_rate, high_hr_signal=False, K=0.5):
     return round(SYS), round(DIA)
 
 
+class SimulatedSensor:
+    """
+    Stateful wrapper around simulate_temp/simulate_heart_rate/simulate_blood_pressure.
+
+    Each instance owns its own fever-cycle state (fever_mode, counter,
+    fever_cnt, patient_temp_baseline, K), mirroring the module-level
+    variables the __main__ block below keeps for its single console-only
+    patient — so multiple simulated sensors can run independently.
+    """
+
+    def __init__(self, sensor_id):
+        self.sensor_id = sensor_id
+        self.fever_mode = False
+        self.counter = 0
+        self.fever_cnt = 0
+        self.patient_temp_baseline = 72 + np.random.normal(0, 3)
+        self.K = 0.5
+
+    def read(self):
+        if self.counter < 15:
+            self.counter += 1
+        elif self.fever_cnt < 5 and self.counter == 15:
+            self.fever_mode = True
+            self.fever_cnt += 1
+        else:
+            self.fever_mode = False
+            self.counter = 0
+            self.fever_cnt = 0
+
+        high_hr_signal = self.counter % 10 == 0
+
+        temperature = simulate_temp(is_fever=self.fever_mode)
+        heart_rate = simulate_heart_rate(temperature, high_hr_signal, self.fever_mode, self.patient_temp_baseline)
+        sys, dia = simulate_blood_pressure(heart_rate, high_hr_signal, self.K)
+
+        return {
+            "sensorID": self.sensor_id,
+            "timestamp": datetime.now().isoformat(),
+            "heart_rate": heart_rate,
+            "body_temperature": temperature,
+            "blood_pressure_systolic": sys,
+            "blood_pressure_diastolic": dia,
+        }
+
+
 if __name__ == "__main__":
     #global patient_stress_level
 

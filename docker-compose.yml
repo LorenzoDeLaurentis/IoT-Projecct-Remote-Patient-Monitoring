@@ -21,7 +21,7 @@ services:
 
   catalog:
     build: .
-    command: python Catalog_Telegram.py
+    command: python Catalog_Telegram.py #Different from New version
     container_name: catalog
     ports:
       - "8080:8080"

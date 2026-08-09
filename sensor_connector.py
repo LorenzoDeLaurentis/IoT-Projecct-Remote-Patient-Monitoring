@@ -27,6 +27,8 @@ import time
 import cherrypy
 import requests
 
+from Data_generator import SimulatedSensor
+
 # ─── Logging ────────────────────────────────────────────────────────────────
 logging.basicConfig(
     level=logging.INFO,
@@ -36,6 +38,7 @@ log = logging.getLogger(__name__)
 
 # ─── Configuration ──────────────────────────────────────────────────────────
 REST_PORT = 5003
+SIMULATION_INTERVAL_SECONDS = 5
 
 # ─── Health Catalog config (fetched once at startup) ─────────────────────────
 # Populated by fetch_catalog_config() / fetch_known_patients() in main().
@@ -70,6 +73,28 @@ def update_reading(sensor_id: str, payload: dict):
     with _readings_lock:
         _readings[sensor_id] = payload
     log.debug("Updated latest reading for sensor %s", sensor_id)
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# Data Generator integration (simulation loop)
+# ══════════════════════════════════════════════════════════════════════════════
+
+def run_simulation_loop(simulators: dict):
+    """
+    Runs forever in a background thread: every SIMULATION_INTERVAL_SECONDS,
+    reads all simulators and writes their output into the store via
+    update_reading(). If simulators is empty, it just keeps sleeping.
+    """
+    while True:
+        time.sleep(SIMULATION_INTERVAL_SECONDS)
+
+        for sensor_id, sensor in simulators.items():
+            reading = sensor.read()
+            update_reading(sensor_id, reading)
+            log.debug("Simulated reading generated for sensor %s", sensor_id)
+
+        if simulators:
+            log.info("Simulation cycle complete: %d readings generated", len(simulators))
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -208,6 +233,16 @@ def main():
     else:
         known_sensor_ids = patients
         log.info("Known sensor IDs retrieved from catalog: %d found", len(known_sensor_ids))
+
+    simulators = {sensor_id: SimulatedSensor(sensor_id) for sensor_id in known_sensor_ids}
+    log.info("%d simulator(s) created", len(simulators))
+    if not simulators:
+        log.warning(
+            "No known sensorIDs available — the simulation loop will be idle "
+            "until the service is restarted with a reachable catalog."
+        )
+
+    threading.Thread(target=run_simulation_loop, args=(simulators,), daemon=True).start()
 
     conf = {
         '/': {
