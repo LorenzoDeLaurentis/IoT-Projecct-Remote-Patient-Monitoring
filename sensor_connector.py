@@ -6,13 +6,15 @@ Responsibilities:
     services (Data Processor, Clinician Portal, etc.)
   - MQTT Subscriber: consumes real-time sensor readings from the Message
     Broker and keeps the in-memory store up to date. [TODO - next iteration]
-  - Health Catalog integration: fetches broker/topic config at startup.
-    [TODO - next iteration]
+  - Health Catalog integration: fetches broker/topic config and the list of
+    known patient sensorIDs at startup (REST consumer role).
 
-This file implements ONLY the REST provider role for now. The in-memory
-store and update_reading() are written as stable extension points so the
-MQTT subscriber and the data generator can be plugged in later without
-refactoring this module.
+This file implements the REST provider role plus the Health Catalog REST
+consumer bootstrap (mqtt_config / known_sensor_ids). Neither value is
+consumed yet — that's future work for the MQTT subscriber and the data
+generator integration. The in-memory store and update_reading() are written
+as stable extension points so the MQTT subscriber and the data generator can
+be plugged in later without refactoring this module.
 """
 
 from __future__ import annotations
@@ -20,8 +22,10 @@ from __future__ import annotations
 import json
 import logging
 import threading
+import time
 
 import cherrypy
+import requests
 
 # ─── Logging ────────────────────────────────────────────────────────────────
 logging.basicConfig(
@@ -32,6 +36,13 @@ log = logging.getLogger(__name__)
 
 # ─── Configuration ──────────────────────────────────────────────────────────
 REST_PORT = 5003
+
+# ─── Health Catalog config (fetched once at startup) ─────────────────────────
+# Populated by fetch_catalog_config() / fetch_known_patients() in main().
+# Stay at these empty/default values if the catalog is unreachable at
+# startup so the REST provider endpoints keep working regardless.
+mqtt_config: dict = {}
+known_sensor_ids: list[str] = []
 
 # ─── In-memory latest-reading store ──────────────────────────────────────────
 # Structure: _readings[sensorID] = {
@@ -112,10 +123,89 @@ class SensorConnectorService:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
+# Health Catalog bootstrap (REST consumer role)
+# ══════════════════════════════════════════════════════════════════════════════
+
+def fetch_catalog_config(catalog_url: str) -> dict | None:
+    """
+    Retrieve this service's MQTT broker/topic config from the Health Catalog.
+
+    Returns the parsed JSON on success, or None (instead of raising) if the
+    catalog is still unreachable after all retries — the caller decides how
+    to degrade gracefully.
+    """
+    for attempt in range(10):
+        try:
+            resp = requests.get(
+                f"{catalog_url}/config", params={"service": "sensor_connector"}, timeout=5
+            )
+            resp.raise_for_status()
+            return resp.json()
+        except Exception as exc:
+            log.warning("Catalog not ready (attempt %d/10): %s", attempt + 1, exc)
+            time.sleep(3)
+    return None
+
+
+def fetch_known_patients(catalog_url: str) -> list[str] | None:
+    """
+    Retrieve the sensorIDs of all patients currently registered in the
+    Health Catalog.
+
+    Returns the list of sensorIDs on success (patients missing a sensorID
+    are skipped), or None (instead of raising) if the catalog is still
+    unreachable after all retries.
+    """
+    for attempt in range(10):
+        try:
+            resp = requests.get(f"{catalog_url}/get_all_patients", timeout=5)
+            resp.raise_for_status()
+            patients = resp.json()
+            return [p["sensorID"] for p in patients if p.get("sensorID")]
+        except Exception as exc:
+            log.warning("Catalog not ready (attempt %d/10): %s", attempt + 1, exc)
+            time.sleep(3)
+    return None
+
+
+# ══════════════════════════════════════════════════════════════════════════════
 # Entry Point
 # ══════════════════════════════════════════════════════════════════════════════
 
-if __name__ == "__main__":
+def main():
+    global mqtt_config, known_sensor_ids
+
+    catalog_url = json.load(open("conf.json"))["catalog_url"]
+
+    cfg = fetch_catalog_config(catalog_url)
+    if cfg is None:
+        log.warning(
+            "Health Catalog unreachable after 10 attempts. Starting Sensor "
+            "Connector with an EMPTY mqtt_config — catalog-dependent features "
+            "will be unavailable until the catalog becomes reachable."
+        )
+        mqtt_config = {}
+    else:
+        mqtt_config = cfg.get("mqtt", {})
+        log.info(
+            "Catalog config retrieved: broker=%s:%s, topics=%s",
+            mqtt_config.get("broker_host"),
+            mqtt_config.get("broker_port"),
+            mqtt_config.get("topics"),
+        )
+
+    patients = fetch_known_patients(catalog_url)
+    if patients is None:
+        log.warning(
+            "Health Catalog unreachable after 10 attempts. Starting Sensor "
+            "Connector with an EMPTY known_sensor_ids list — catalog-dependent "
+            "features will be unavailable until the catalog becomes reachable."
+        )
+        known_sensor_ids = []
+    else:
+        known_sensor_ids = patients
+        log.info("Known sensor IDs retrieved from catalog: %d found", len(known_sensor_ids))
+
     conf = {
         '/': {
             'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
@@ -132,3 +222,7 @@ if __name__ == "__main__":
     cherrypy.tree.mount(SensorConnectorService(), '/', conf)
     cherrypy.engine.start()
     cherrypy.engine.block()
+
+
+if __name__ == "__main__":
+    main()
