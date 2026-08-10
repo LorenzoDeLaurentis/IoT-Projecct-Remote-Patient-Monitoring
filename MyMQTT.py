@@ -12,7 +12,10 @@ class MyMQTT:
         self._topic = ""
         self._isSubscriber = False
         # create an instance of paho.mqtt.client
-        self._paho_mqtt = PahoMQTT.Client(clientID, True)
+        try:
+            self._paho_mqtt = PahoMQTT.Client(PahoMQTT.CallbackAPIVersion.VERSION1, clientID, True)
+        except AttributeError:
+            self._paho_mqtt = PahoMQTT.Client(clientID, True)
         # register the callback
         self._paho_mqtt.on_connect = self.myOnConnect
         self._paho_mqtt.on_message = self.myOnMessageReceived
