@@ -28,6 +28,7 @@ import cherrypy
 import requests
 
 from Data_generator import SimulatedSensor
+from MyMQTT import MyMQTT
 
 # ─── Logging ────────────────────────────────────────────────────────────────
 logging.basicConfig(
@@ -46,6 +47,12 @@ SIMULATION_INTERVAL_SECONDS = 5
 # startup so the REST provider endpoints keep working regardless.
 mqtt_config: dict = {}
 known_sensor_ids: list[str] = []
+
+# ─── MQTT publisher (connected once at startup) ───────────────────────────────
+# Populated by connect_mqtt_publisher() in main(). Stays None if mqtt_config
+# is empty or the broker is unreachable, so update_reading() just skips
+# publishing — the REST provider/consumer roles keep working regardless.
+mqtt_client: MyMQTT | None = None
 
 # ─── In-memory latest-reading store ──────────────────────────────────────────
 # Structure: _readings[sensorID] = {
@@ -73,6 +80,14 @@ def update_reading(sensor_id: str, payload: dict):
     with _readings_lock:
         _readings[sensor_id] = payload
     log.debug("Updated latest reading for sensor %s", sensor_id)
+
+    if mqtt_client is not None:
+        topic = mqtt_config.get("topics", {}).get("sensors", "iothealth/+/sensors").replace("+", sensor_id)
+        try:
+            mqtt_client.myPublish(topic, payload)
+            log.debug("Published reading for sensor %s to topic %s", sensor_id, topic)
+        except Exception as exc:
+            log.warning("Failed to publish reading for sensor %s to MQTT: %s", sensor_id, exc)
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -197,11 +212,51 @@ def fetch_known_patients(catalog_url: str) -> list[str] | None:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
+# MQTT Publisher
+# ══════════════════════════════════════════════════════════════════════════════
+
+def connect_mqtt_publisher(mqtt_config: dict) -> MyMQTT | None:
+    """
+    Connect a publisher-only MyMQTT client (notifier=None, never subscribes)
+    to the broker described by mqtt_config, matching the MyMQTT convention
+    used by time_based_alert.py.
+
+    Returns the started MyMQTT instance on success, or None (instead of
+    raising) if mqtt_config is empty or the broker is still unreachable
+    after all retries — the caller decides how to degrade gracefully.
+    """
+    if not mqtt_config:
+        log.warning(
+            "No mqtt_config available (Health Catalog was unreachable at "
+            "startup) — MQTT publishing will be disabled."
+        )
+        return None
+
+    broker_host = mqtt_config.get("broker_host", "message_broker")
+    broker_port = int(mqtt_config.get("broker_port", 1883))
+
+    for attempt in range(10):
+        try:
+            client = MyMQTT("SensorConnector_Publisher", broker_host, broker_port, None)
+            client.start()
+            return client
+        except Exception as exc:
+            log.warning("Broker not ready (attempt %d/10): %s", attempt + 1, exc)
+            time.sleep(3)
+
+    log.warning(
+        "Could not connect to the MQTT broker after 10 attempts. Continuing "
+        "without MQTT publishing — readings will still be stored via REST."
+    )
+    return None
+
+
+# ══════════════════════════════════════════════════════════════════════════════
 # Entry Point
 # ══════════════════════════════════════════════════════════════════════════════
 
 def main():
-    global mqtt_config, known_sensor_ids
+    global mqtt_config, known_sensor_ids, mqtt_client
 
     catalog_url = json.load(open("conf.json"))["catalog_url"]
 
@@ -221,6 +276,10 @@ def main():
             mqtt_config.get("broker_port"),
             mqtt_config.get("topics"),
         )
+
+    mqtt_client = connect_mqtt_publisher(mqtt_config)
+    if mqtt_client is not None:
+        log.info("MQTT publisher connected to broker %s:%s", mqtt_config.get("broker_host"), mqtt_config.get("broker_port"))
 
     patients = fetch_known_patients(catalog_url)
     if patients is None:
