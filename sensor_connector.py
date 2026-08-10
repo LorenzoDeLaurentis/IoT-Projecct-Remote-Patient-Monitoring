@@ -3,7 +3,8 @@ Sensor Connector Microservice
 ===============================
 Responsibilities:
   - REST Provider: exposes the latest sensor reading per sensorID to other
-    services (Data Processor, Clinician Portal, etc.)
+    services (Data Processor, Clinician Portal, etc.) via read-only GET
+    endpoints.
   - MQTT Subscriber: consumes real-time sensor readings from the Message
     Broker and keeps the in-memory store up to date. [TODO - next iteration]
   - Health Catalog integration: fetches broker/topic config and the list of
@@ -145,21 +146,6 @@ class SensorConnectorService:
 
         else:
             raise cherrypy.HTTPError(400, "Bad request")
-
-    def POST(self, *path, **params):
-        # TEMPORARY - for manual testing only, will be removed once the MQTT
-        # ingestion path exists.
-        if len(path) == 3 and path[0] == "sensors" and path[2] == "latest":
-            sensor_id = path[1]
-            try:
-                payload = json.loads(cherrypy.request.body.read())
-            except json.JSONDecodeError:
-                raise cherrypy.HTTPError(400, "Invalid JSON in request body")
-
-            update_reading(sensor_id, payload)
-            return json.dumps(payload)
-
-        raise cherrypy.HTTPError(400, "Bad request")
 
 
 # ══════════════════════════════════════════════════════════════════════════════
