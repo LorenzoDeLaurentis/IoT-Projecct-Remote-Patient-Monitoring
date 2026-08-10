@@ -3,19 +3,23 @@ Sensor Connector Microservice
 ===============================
 Responsibilities:
   - REST Provider: exposes the latest sensor reading per sensorID to other
-    services (Data Processor, Clinician Portal, etc.) via read-only GET
-    endpoints.
-  - MQTT Subscriber: consumes real-time sensor readings from the Message
-    Broker and keeps the in-memory store up to date. [TODO - next iteration]
-  - Health Catalog integration: fetches broker/topic config and the list of
-    known patient sensorIDs at startup (REST consumer role).
-
-This file implements the REST provider role plus the Health Catalog REST
-consumer bootstrap (mqtt_config / known_sensor_ids). Neither value is
-consumed yet — that's future work for the MQTT subscriber and the data
-generator integration. The in-memory store and update_reading() are written
-as stable extension points so the MQTT subscriber and the data generator can
-be plugged in later without refactoring this module.
+    services (e.g. Patient-Facing App, Clinician Portal) via read-only GET
+    endpoints (GET /health, GET /sensors, GET /sensors/<sensorID>/latest).
+    There is no write/POST endpoint.
+  - REST Consumer: at startup, fetches broker/topic config
+    (fetch_catalog_config) and the list of known patient sensorIDs
+    (fetch_known_patients) from the Health Catalog, retrying and degrading
+    gracefully (empty config/list, no crash) if the catalog is unreachable.
+  - Data Generator integration: creates one SimulatedSensor instance per
+    known sensorID, and runs a background daemon thread
+    (run_simulation_loop) that periodically generates a reading for each
+    and feeds it into update_reading().
+  - MQTT Publisher: every reading that flows through update_reading()
+    (currently only from the simulation loop, since the manual POST
+    endpoint no longer exists) is also published to the Message Broker, on
+    a per-sensor topic derived from the catalog-provided topic pattern,
+    degrading gracefully (log warning, keep working) if the broker is
+    unavailable.
 """
 
 from __future__ import annotations
