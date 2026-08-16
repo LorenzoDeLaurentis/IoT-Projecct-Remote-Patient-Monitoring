@@ -53,6 +53,17 @@ SIMULATION_INTERVAL_SECONDS = 5
 mqtt_config: dict = {}
 known_sensor_ids: list[str] = []
 
+PATIENT_CONDITIONS = {
+    "sensor2594": "tachicardia",
+    "sensor1": "ipertensione",
+    "Sensor05": "bradicardia",
+    "sensor_02": "ipotensione",
+    "sensor99": "ipertiroidismo",
+    "sensor_01": "ipotiroidismo",
+    "sensor_03": "diabete",
+    "sensor_Bau": "insufficienza_renale",
+}
+
 # ─── MQTT publisher (connected once at startup) ───────────────────────────────
 # Populated by connect_mqtt_publisher() in main(). Stays None if mqtt_config
 # is empty or the broker is unreachable, so update_reading() just skips
@@ -283,7 +294,10 @@ def main():
         known_sensor_ids = patients
         log.info("Known sensor IDs retrieved from catalog: %d found", len(known_sensor_ids))
 
-    simulators = {sensor_id: SimulatedSensor(sensor_id) for sensor_id in known_sensor_ids}
+    simulators = {
+        sensor_id: SimulatedSensor(sensor_id, condition=PATIENT_CONDITIONS.get(sensor_id, "healthy"))
+        for sensor_id in known_sensor_ids
+    }
     log.info("%d simulator(s) created", len(simulators))
     if not simulators:
         log.warning(

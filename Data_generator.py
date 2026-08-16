@@ -2,7 +2,7 @@ import numpy as np
 import time
 from datetime import datetime
 
-def simulate_temp(is_fever=False):
+def simulate_temp(is_fever=False, temp_offset=0.0):
     """
     Simulation of body temperature based on the current time.
     """
@@ -22,10 +22,10 @@ def simulate_temp(is_fever=False):
     fever_offset = np.random.normal(2, 0.3)  if is_fever else 0.0
 
     #Rounding to 2 decimal places to simulate typical sensor output
-    return round(base_temp + noise + fever_offset, 2)
+    return round(base_temp + noise + fever_offset + temp_offset, 2)
 
 
-def simulate_heart_rate(temp, high_hr_signal=False, fever_mode=False, patient_temp_baseline=72):
+def simulate_heart_rate(temp, high_hr_signal=False, fever_mode=False, hr_baseline=72):
     #MAYBE A VARIABLE WITHE THE GENERAL STATUS OF THE PATIENT, LIKE STRESS LEVEL, ACTIVITY LEVEL, OR FEVER STATUS, TO INFLUENCE THE HEART RATE SIMULATION
 
     # Simulate heart rate with a normal resting range of 60-100 bpm, with some random fluctuations
@@ -46,7 +46,7 @@ def simulate_heart_rate(temp, high_hr_signal=False, fever_mode=False, patient_te
 
     hr_noise = np.random.normal(0, 3) # Random noise with a standard deviation of 3 bpm
 
-    heart_rate = patient_temp_baseline + hr_circadian + hr_fever_impact + hr_noise
+    heart_rate = hr_baseline + hr_circadian + hr_fever_impact + hr_noise
 
     if high_hr_signal:
         heart_rate += 20 # Adding a significant increase to test the alert system
@@ -54,13 +54,13 @@ def simulate_heart_rate(temp, high_hr_signal=False, fever_mode=False, patient_te
     return round(heart_rate)
 
 
-def simulate_blood_pressure(heart_rate, high_hr_signal=False, K=0.5):
+def simulate_blood_pressure(heart_rate, high_hr_signal=False, K=0.5, sys_baseline=120):
     # We have to use the HR as an input
     HR_baseline = 72
     sys_noise = np.random.normal(0, 3)
     dia_noise = np.random.normal(0, 2)
-    base_sys = 120
-    
+    base_sys = sys_baseline
+
     if high_hr_signal:
         base_sys += 15  # Pressure raises if HR is high
         
@@ -70,22 +70,48 @@ def simulate_blood_pressure(heart_rate, high_hr_signal=False, K=0.5):
     return round(SYS), round(DIA)
 
 
+# Baseline profiles: 4 "pure" single-variable conditions (useful to test one
+# alert in isolation) plus 4 named diseases that shift more than one vital at
+# once, mirroring real comorbidity patterns. Diabetes has no direct vital-sign
+# signature in this system (no glucose sensor), so it is approximated by the
+# hypertension + mild tachycardia pattern common in decompensated type-2 diabetes.
+CONDITION_PROFILES = {
+    "healthy":              {"hr_mean": 72,  "hr_std": 3, "sys_baseline": 120, "temp_offset": 0.0},
+    "tachicardia":          {"hr_mean": 95,  "hr_std": 5, "sys_baseline": 120, "temp_offset": 0.0},
+    "bradicardia":          {"hr_mean": 50,  "hr_std": 3, "sys_baseline": 120, "temp_offset": 0.0},
+    "ipertensione":         {"hr_mean": 72,  "hr_std": 3, "sys_baseline": 150, "temp_offset": 0.0},
+    "ipotensione":          {"hr_mean": 72,  "hr_std": 3, "sys_baseline": 80,  "temp_offset": 0.0},
+    "ipertiroidismo":       {"hr_mean": 102, "hr_std": 5, "sys_baseline": 135, "temp_offset": 0.3},
+    "ipotiroidismo":        {"hr_mean": 52,  "hr_std": 3, "sys_baseline": 120, "temp_offset": -0.5},
+    "diabete":              {"hr_mean": 85,  "hr_std": 4, "sys_baseline": 145, "temp_offset": 0.0},
+    "insufficienza_renale": {"hr_mean": 90,  "hr_std": 4, "sys_baseline": 155, "temp_offset": 0.0},
+}
+
+
 class SimulatedSensor:
     """
     Stateful wrapper around simulate_temp/simulate_heart_rate/simulate_blood_pressure.
 
     Each instance owns its own fever-cycle state (fever_mode, counter,
-    fever_cnt, patient_temp_baseline, K), mirroring the module-level
+    fever_cnt, hr_baseline, K), mirroring the module-level
     variables the __main__ block below keeps for its single console-only
     patient — so multiple simulated sensors can run independently.
+
+    The `condition` parameter selects a baseline profile from
+    CONDITION_PROFILES that shapes the sensor's heart rate, blood pressure,
+    and temperature baselines.
     """
 
-    def __init__(self, sensor_id):
+    def __init__(self, sensor_id, condition="healthy"):
         self.sensor_id = sensor_id
+        self.condition = condition
+        profile = CONDITION_PROFILES.get(condition, CONDITION_PROFILES["healthy"])
         self.fever_mode = False
         self.counter = 0
         self.fever_cnt = 0
-        self.patient_temp_baseline = 72 + np.random.normal(0, 3)
+        self.hr_baseline = profile["hr_mean"] + np.random.normal(0, profile["hr_std"])
+        self.sys_baseline = profile["sys_baseline"]
+        self.temp_offset = profile["temp_offset"]
         self.K = 0.5
 
     def read(self):
@@ -101,9 +127,9 @@ class SimulatedSensor:
 
         high_hr_signal = self.counter % 10 == 0
 
-        temperature = simulate_temp(is_fever=self.fever_mode)
-        heart_rate = simulate_heart_rate(temperature, high_hr_signal, self.fever_mode, self.patient_temp_baseline)
-        sys, dia = simulate_blood_pressure(heart_rate, high_hr_signal, self.K)
+        temperature = simulate_temp(is_fever=self.fever_mode, temp_offset=self.temp_offset)
+        heart_rate = simulate_heart_rate(temperature, high_hr_signal, self.fever_mode, self.hr_baseline)
+        sys, dia = simulate_blood_pressure(heart_rate, high_hr_signal, self.K, self.sys_baseline)
 
         return {
             "sensorID": self.sensor_id,
