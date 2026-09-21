@@ -111,14 +111,14 @@ class CatalogService:
             mqtt_config = config_data.get("mqtt", {})
 
             if not mqtt_config:
-                log.warning("No MQTT config found in database")
+                #log.warning("No MQTT config found in database")
                 raise cherrypy.HTTPError(404, "MQTT configuration not found in catalog")
 
-            log.info("Config requested by service: %s", service_name or "unknown")
+            #log.info("Config requested by service: %s", service_name or "unknown")
             return {"mqtt": mqtt_config}
 
         except Exception as e:
-            log.error("Error saving database: %s", e)
+            #log.error("Error saving database: %s", e)
             raise cherrypy.HTTPError(500, f"Database save failed: {e}")
 
 
@@ -304,21 +304,27 @@ class CatalogService:
         elif len(path) != 0 and path[0] == "get_reminders":
             chatID = int(params.get("chatID"))
 
-            found = False
+            found = self.find_patient_by_id(chatID)
+            #found = False
+
+            '''
             for p in self.data["patients"]:
                 if p["chatID"] == chatID:
                     found = p
                     break
+            '''
 
             # if patient don't exist
             if not found:
                 raise cherrypy.HTTPError(404, "Patient not found")
             
             # if patient exist by no threshold
-            reminders = found.get("reminders")
+            reminders = found.get("reminders", [])
+
+            '''
             if not reminders:
                 raise cherrypy.HTTPError(500, "Internal Server Error: Reminders data missing for parient")
-            
+            '''
             return json.dumps(reminders)
                     
         
@@ -350,6 +356,18 @@ class CatalogService:
         # APPOINTMENTS with Telegram
         elif len(path)!= 0  and path[0] == "get_appointments":
             chatID = int(params.get("chatID"))
+
+            p = self.find_patient_by_id(chatID)
+            if not p:
+                raise cherrypy.HTTPError(404, "Patient not found")
+            response = {
+                "doctor": p.get("doctor"),
+                "appointments": p.get("appointments", [])
+            }
+            return json.dumps(response)
+
+
+            '''
             for p in self.data["patients"]:
                 if p["chatID"] == chatID:
                     response = {
@@ -358,6 +376,9 @@ class CatalogService:
                     }
                     return json.dumps(response)
             raise cherrypy.HTTPError(404, "Patient not found")
+            '''
+
+            
         
 
         # APPOINTMENTS with Node-RED:
@@ -465,6 +486,7 @@ class CatalogService:
 
             # Extract basic info (adjust keys to match your exact request body structure)
             chat_id = int(body.get("chatID"))
+
             name = body.get("name")
             birthdate = body.get("birthdate", "N/A")
             doctor = body.get("doctor", "N/A")
@@ -491,6 +513,8 @@ class CatalogService:
 
             self.data["patients"].append(new_patient)
             self.save_database()
+
+            return "patient added"
             
 
             
@@ -599,6 +623,7 @@ class CatalogService:
         
         elif path[0] == "update_reminder":
             chatID = int(path[1])
+            
             change_body = cherrypy.request.body.read()
             change_body = json.loads(change_body)
 
@@ -638,53 +663,95 @@ class CatalogService:
         # !!!!!! TO DO: maybe do a check with the date: if reason is the same and also the date is the same, then this is the element to modify !!!!!!!
         elif path[0] == "update_appointment":
             chatID = int(path[1])
-            change_body = cherrypy.request.body.read()
-            change_body = json.loads(change_body)
-        
-            target_reason = change_body.get("target_reason") # The current medicine name to find --> write in body "target_reason":"name in database". It is the key to access to correct appointment
-            new_date = change_body.get("new_date") # The updated medicine name 
-            new_reason = change_body.get("new_reason") # updated reason
-            new_time = change_body.get("new_time") # updated time
-            new_status = change_body.get("new_status") # updated status
+
+            try:
+                change_body = cherrypy.request.body.read()
+                change_body = json.loads(change_body)
+            except Exception:
+                raise cherrypy.HTTPError(400, "Invalid JSON in request body")
+
+            if "target_reason" in change_body:
+                target_reason = change_body.get("target_reason") # The current medicine name to find --> write in body "target_reason":"name in database". It is the key to access to correct appointment
+
+                if not target_reason:
+                    raise cherrypy.HTTPError(400, "Missing 'target_reason' in request body")
+
+                new_date = change_body.get("new_date") # The updated medicine name 
+                new_reason = change_body.get("new_reason") # updated reason
+                new_time = change_body.get("new_time") # updated time
+                new_status = change_body.get("new_status") # updated status
                     
-            patient_found = False
-            appointment_updated = False
-            for patient in self.data["patients"]:
-                if patient["chatID"] == chatID: # if the rule name is the same, I can change the rules
-                    patient_found = True
-        
-                    for appointment in patient["appointments"]:
-                        if appointment["reason"] == target_reason:
-                            if new_date:
-                                appointment["date"] = new_date
+                patient_found = False
+                appointment_updated = False
+                for patient in self.data["patients"]:
+                    if patient["chatID"] == chatID: # if the rule name is the same, I can change the rules
+                        patient_found = True
+            
+                        for appointment in patient["appointments"]:
+                            if appointment["reason"] == target_reason and appointment["reason"].strip().lower() == target_reason.strip().lower():
+                                if new_date:
+                                    appointment["date"] = new_date
+                                if new_time:
+                                    appointment["time"] = new_time
+                                if new_reason:
+                                    appointment["reason"] = new_reason
+                                if new_status:
+                                    appointment["status"] = new_status
                                 appointment_updated = True
-                            if new_time:
-                                appointment["time"] = new_time
-                                appointment_updated = True
-                            if new_reason:
-                                appointment["reason"] = new_reason
-                                appointment_updated = True
-                            if new_status:
-                                appointment["status"] = new_status
-                                appointment_updated = True
-                                    
-            if appointment_updated:
-                with open(self.database_file, "w") as f:
-                    json.dump(self.data, f, indent=4)
-                return "Database updated"
-            elif not patient_found:
-                raise cherrypy.HTTPError(404, "Patient not found")
+                                        
+                if appointment_updated:
+                    with open(self.database_file, "w") as f:
+                        json.dump(self.data, f, indent=4)
+                    return "Database updated"
+                elif not patient_found:
+                    raise cherrypy.HTTPError(404, "Patient not found")
+                else:
+                    raise cherrypy.HTTPError(404, "Reminder with that date is not found")
+
+
             else:
-                raise cherrypy.HTTPError(404, "Reminder with that date is not found")
-
-
+                patient_found = False
+                appointment_updated = False
+                for patient in self.data["patients"]:
+                    if patient["chatID"] == chatID:
+                        patient_found = True
+                        for appointment in patient.get("appointments", []):
+                            if appointment.get("status") == "pending":
+                                appointment["status"] = "confirmed"
+                                appointment_updated = True
+                                break
+                    
+                if appointment_updated:
+                    self.save_database()
+                    return "OK"
+                elif not patient_found:
+                    raise cherrypy.HTTPError(404, "Patient not found")
+                else:
+                    raise cherrypy.HTTPError(404, "No pending appointment found for this patient.")
 
 
 
 
     def DELETE(self, *path, **params):
+        if path[0] == "delete_all_reminders":
+            chatID = int(params.get("chatID"))
+            
+            found_patient = False
+            for patient in self.data["patients"]:
+                if patient["chatID"] == chatID:
+                    found_patient = True
+                    patient["reminders"] = []
+                    break
+            
+            if found_patient:
+                self.save_database()
+                return "OK"
+            else:
+                raise cherrypy.HTTPError(404, "Patient not found")
+
+            
         # Delete the entire patient profile
-        if path[0] == "delete_patient":
+        elif path[0] == "delete_patient":
             chatID = int(path[1])
 
             found = False
@@ -756,6 +823,10 @@ if __name__ == "__main__":
 
     # creates an instance of your web handler class
     cherrypy.tree.mount(CatalogService("database.json"), '/', conf)
+    cherrypy.config.update({
+        'server.socket_host': "0.0.0.0",
+        'server.socket_port': 8080
+    })
     cherrypy.engine.start()
     cherrypy.engine.block()
 
