@@ -3,6 +3,7 @@ import telepot
 from telepot.loop import MessageLoop
 from telepot.namedtuple import InlineKeyboardMarkup, InlineKeyboardButton
 import json
+import os
 import requests
 import time
 from datetime import datetime
@@ -40,10 +41,29 @@ class PatientMonitoringBot:
             if "appointments/confirmation" in topic:
                 chatID = msg_data.get("chatID")
                 date = msg_data.get("date")
-                time = msg_data.get("time")
-                update = requests.put(f"{self.catalog_url}/update_appointment", json=msg_data)
+                app_time = msg_data.get("time")
 
-                self.bot.sendMessage(chatID, f"Your doctor confirmed your appointment on {date} at {time}.")
+                # Il catalog _02 salva data/ora solo nel ramo "target_reason":
+                # recupero la reason del primo appuntamento pending
+                res = requests.get(f"{self.catalog_url}/get_appointments?chatID={chatID}")
+                apps = res.json().get("appointments", []) if res.status_code == 200 else []
+                pending = next((a for a in apps if isinstance(a, dict) and a.get("status") == "pending"), None)
+                if pending is None:
+                    print(f"Nessun appuntamento pending per {chatID}")
+                    return
+
+                body = {
+                    "target_reason": pending.get("reason"),
+                    "new_date": date,
+                    "new_time": app_time,
+                    "new_status": "confirmed"
+                }
+                update = requests.put(f"{self.catalog_url}/update_appointment/{chatID}", json=body)
+                if update.status_code != 200:
+                    print(f"update_appointment fallito: {update.status_code} {update.text}")
+                    return
+
+                self.bot.sendMessage(chatID, f"Your doctor confirmed your appointment on {date} at {app_time}.")
                 print(f"Message sent to {chatID}")
 
             # 2. Caso: Alert dai sensori (se previsto nel tuo sistema)
@@ -69,13 +89,14 @@ class PatientMonitoringBot:
                 response = requests.get(f"{self.catalog_url}/search_patient?chatID={chatID}")
                 if response.status_code == 200:
                     user_data = response.json()
-                    self.bot.sendMessage(chatID, f"Welcome {user_data['name']}")
+                    self.bot.sendMessage(chatID, f"Welcome {user_data.get('name', '')}")
                     self.send_main_menu(chatID)
                 else:
                     self.bot.sendMessage(chatID, "Welcome! You are not registered. Let's get started.\nWhat's your name? (Name and Surname)")
                     self.pending_registrations[chatID] = {"step": 1}
-            except:
-                self.bot.sendMessage(chatID, "Error connecting Catalog.")
+            except Exception as e:
+                print(f"[/start] {type(e).__name__}: {e}")   # causa reale
+                self.bot.sendMessage(chatID, f"Error connecting Catalog ({type(e).__name__}).")
 
     # Registration or request
     def manage_registration(self, chatID, text):
@@ -103,14 +124,24 @@ class PatientMonitoringBot:
                 "doctor": state["doctor"],
                 "sensorID": state["sensor_id"]
             }
-            check_res = requests.get(f"{self.catalog_url}/search_patient?chatID={chatID}")
-            
-            if check_res.status_code == 200:
-                requests.put(f"{self.catalog_url}/update_patient", json=new_user)
-                self.bot.sendMessage(chatID, "Profile updated successfully!")
-            else:
-                requests.post(f"{self.catalog_url}/add_patient", json=new_user)
-                self.bot.sendMessage(chatID, f"Welcome, {state['fullname']}! Registration complete.")
+            try:
+                check_res = requests.get(f"{self.catalog_url}/search_patient?chatID={chatID}")
+
+                if check_res.status_code == 200:
+                    res = requests.put(f"{self.catalog_url}/update_general_info", json=new_user)
+                    ok_msg = "Profile updated successfully!"
+                else:
+                    res = requests.post(f"{self.catalog_url}/add_patient", json=new_user)
+                    ok_msg = f"Welcome, {state['fullname']}! Registration complete."
+
+                if res.status_code == 200:
+                    self.bot.sendMessage(chatID, ok_msg)
+                else:
+                    print(f"Registrazione fallita: {res.status_code} {res.text}")
+                    self.bot.sendMessage(chatID, "Error saving profile. Try again.")
+            except Exception as e:
+                print(f"[registration] {type(e).__name__}: {e}")
+                self.bot.sendMessage(chatID, f"Error connecting Catalog ({type(e).__name__}).")
             
             del self.pending_registrations[chatID]
             self.send_main_menu(chatID)
@@ -128,10 +159,15 @@ class PatientMonitoringBot:
             
             try:
                 self.client.myPublish("clinician/patient/appointments/request", mqtt_payload)
-                requests.post(f"{self.catalog_url}/add_appointment", json=mqtt_payload)
-                print(mqtt_payload)               
-                self.bot.sendMessage(chatID, f"Appointmente saved. We requested to your doctor an appointment.")              
-                del self.pending_registrations[chatID] 
+                catalog_body = {**mqtt_payload, "date": "TBD", "time": "TBD"}
+                res = requests.post(f"{self.catalog_url}/add_appointment", json=catalog_body)
+                print(mqtt_payload)
+                if res.status_code == 200:
+                    self.bot.sendMessage(chatID, "Appointment saved. We requested to your doctor an appointment.")
+                else:
+                    print(f"add_appointment fallito: {res.status_code} {res.text}")
+                    self.bot.sendMessage(chatID, "Error saving appointment. Try again.")
+                del self.pending_registrations[chatID]
             except Exception as e:
                 self.bot.sendMessage(chatID, f"Errore: {e}")
            
@@ -202,7 +238,13 @@ class PatientMonitoringBot:
             if not appointments:
                 text = f"No appointments found with doctor {doctor}."
             else:
-                text = f"Your appointments with doctor {doctor}:\n" + "\n".join([f"Appointment on {a}" for a in appointments])
+                lines = []
+                for a in appointments:
+                    if isinstance(a, dict):
+                        lines.append(f"{a.get('date', 'TBD')} {a.get('time', 'TBD')} - {a.get('reason', '')} ({a.get('status', '')})")
+                    else:
+                        lines.append(f"Appointment on {a}")
+                text = f"Your appointments with doctor {doctor}:\n" + "\n".join(lines)
             
             buttons = [
                     [InlineKeyboardButton(text="Book New", callback_data='app_create')],
@@ -213,9 +255,9 @@ class PatientMonitoringBot:
             self.bot.sendMessage(chatID, "What is the reason for the appointment?")
             self.pending_registrations[chatID] = {"step": "waiting_app_reason"}
         elif query_data == 'app_delete':  # avvisare anche il dottore? per ora solo cancellazione lato bot
-            url = f"{self.catalog_url}/delete_all_appointments?chatID={chatID}"
             try:
-                res = requests.delete(url)
+                res = requests.put(f"{self.catalog_url}/update_general_info",
+                                   json={"chatID": chatID, "appointments": []})
                 if res.status_code == 200:
                     self.bot.sendMessage(chatID, "All appointments have been deleted!")
                 else:
@@ -261,7 +303,7 @@ class PatientMonitoringBot:
         # ALERTS: (creare gli alert del sensore o gli alert inviati direttamente dal dottore)
         elif query_data == 'alerts':
             res = requests.get(f"{self.catalog_url}/get_alerts?chatID={chatID}")
-            alerts = res.json()
+            alerts = res.json() if res.status_code == 200 else []
             
             if not alerts:
                 text = "No alerts found."
@@ -303,10 +345,14 @@ class PatientMonitoringBot:
 
 if __name__ == "__main__":
     config = json.load(open("conf.json"))
-    
+
+    # Docker: usa conf.json (http://catalog:8080). Fuori da Docker: CATALOG_URL=http://127.0.0.1:8080
+    catalog_url = os.getenv("CATALOG_URL", config["catalog_url"])
+    print(f"Catalog URL: {catalog_url}")
+
     bot = PatientMonitoringBot(
         token=config["token"],
-        catalog_url=config["catalog_url"],
+        catalog_url=catalog_url,
         broker=config["broker"],
         port=config["port"]
     )
