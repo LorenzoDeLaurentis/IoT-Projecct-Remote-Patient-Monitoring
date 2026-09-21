@@ -1,6 +1,11 @@
 import json
 
-import paho.mqtt.client as PahoMQTT
+try:
+    import paho.mqtt.client as PahoMQTT  # type: ignore[import-not-found]
+except ImportError as exc:
+    raise ModuleNotFoundError(
+        "paho-mqtt is required to use MyMQTT. Install it with 'pip install paho-mqtt'."
+    ) from exc
 
 
 class MyMQTT:

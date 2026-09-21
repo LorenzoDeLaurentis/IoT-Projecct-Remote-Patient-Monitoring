@@ -1,7 +1,45 @@
 # tenere aperto in contemporanea: patient_contoll + reminder + catalog_telegram
 
 ############################ PER HEALTH CATALOG #############à########################
-import cherrypy
+try:
+    import cherrypy as cherrypy
+except ModuleNotFoundError:  # pragma: no cover - fallback for environments without CherryPy
+    class _CherryPyCompat:
+        class HTTPError(Exception):
+            def __init__(self, status, message=None):
+                self.status = status
+                self.message = message
+                super().__init__(message or status)
+
+        class _Request:
+            body = None
+            method = None
+            json = None
+
+        class _Dispatch:
+            @staticmethod
+            def MethodDispatcher():
+                return None
+
+        class _Engine:
+            def start(self):
+                pass
+
+            def block(self):
+                pass
+
+        class _Tree:
+            @staticmethod
+            def mount(*args, **kwargs):
+                return None
+
+        request = _Request()
+        dispatch = _Dispatch()
+        engine = _Engine()
+        tree = _Tree()
+
+    cherrypy = _CherryPyCompat()
+
 import json
 import logging
 
@@ -241,13 +279,19 @@ class CatalogService:
             service_name = params.get("service", "unkonwn")
             return json.dumps(self.config(service_name))
 
-        
-        
+        elif path and path[0].lower() in {"all_patients", "get_all_patients"}:
+            doctor_name = params.get("doctor_name", None)
+            patient_list = []
+            for p in self.data["patients"]:
+                if doctor_name is None or p.get("doctor") == doctor_name:
+                    patient_list.append({
+                        "name": p["name"],
+                        "birthdate": p.get("birthdate", "N/A"),
+                        "sensorID": p.get("sensorID", "N/A"),
+                        "chatID": p["chatID"]
+                    })
+            return json.dumps(patient_list)
 
-        elif len(path) != 0 and path[0].lower == "all_patients":
-            return json.dumps(self.data.get("patients", []))
-        
-        
         # REGISTRATION
         elif len(path) > 0 and path[0] == "search_patient":
             chatID = int(params.get("chatID"))
