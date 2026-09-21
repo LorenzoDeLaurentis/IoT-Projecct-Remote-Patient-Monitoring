@@ -22,7 +22,7 @@ services:
 
   catalog:
     build: .
-    command: python Catalog_Telegram.py #Different from New version
+    command: python "Catalog_Telegram(new version).py" #Different from New version
     container_name: catalog
     ports:
       - "8080:8080"
@@ -74,6 +74,17 @@ services:
     container_name: vital-sign-alert
     depends_on:
       - catalog
+    restart: unless-stopped
+
+  sensor-connector:
+    build: .
+    command: python sensor_connector.py
+    container_name: sensor-connector
+    ports:
+      - "5003:5003"
+    depends_on:
+      - catalog
+      - mqtt-broker
     restart: unless-stopped
 
 volumes:
