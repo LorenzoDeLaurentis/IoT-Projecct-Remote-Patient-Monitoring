@@ -52,14 +52,6 @@ services:
       - catalog
     restart: unless-stopped
 
-  data-generator:
-    build: .
-    command: python Data_generator.py
-    container_name: data-generator
-    depends_on:
-      - catalog
-    restart: unless-stopped
-
   reminder:
     build: .
     command: python time_based_alert.py

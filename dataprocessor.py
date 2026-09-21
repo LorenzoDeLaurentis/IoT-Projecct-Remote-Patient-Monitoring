@@ -30,8 +30,8 @@ logging.basicConfig(
 log = logging.getLogger(__name__)
 
 # ─── Configuration ──────────────────────────────────────────────────────────
-HEALTH_CATALOG_URL = "http://health_catalog:5000"
-TIMESERIES_ADAPTOR_URL = "http://timeseries_adaptor:5001"
+HEALTH_CATALOG_URL = "http://catalog:8080"
+TIMESERIES_ADAPTOR_URL = "http://timeseries-adaptor:5001"
 REST_PORT = 5002
 
 # Rolling window duration (seconds). Keep last 15 minutes by default.

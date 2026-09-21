@@ -31,7 +31,7 @@ logging.basicConfig(
 log = logging.getLogger(__name__)
 
 # ─── Configuration ───────────────────────────────────────────────────────────
-HEALTH_CATALOG_URL = "http://health_catalog:5000"
+HEALTH_CATALOG_URL = "http://catalog:8080"
 DB_PATH = Path("/data/timeseries.db")
 REST_PORT = 5001
 METRICS = [
