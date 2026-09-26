@@ -12,6 +12,16 @@
     },
 
 
+    "doctors": [
+        {
+            "doctorID": "doc001",
+            "name": "Luca Bianco",
+            "username": "diana",
+            "password": "diana"
+        }
+    ],
+
+
     "patients": [
         {
             "chatID": 1289459725,

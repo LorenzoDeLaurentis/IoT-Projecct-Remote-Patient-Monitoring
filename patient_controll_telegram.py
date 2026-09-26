@@ -6,18 +6,31 @@ import json
 import os
 import requests
 import time
+import threading
 from datetime import datetime
-import random
-from MyMQTT import MyMQTT 
+from zoneinfo import ZoneInfo
+from MyMQTT import MyMQTT
 
 class PatientMonitoringBot:
     def __init__(self, token, catalog_url, broker, port):
         self.tokenBot = token
         self.catalog_url = catalog_url
+        # Docker: http://sensor-connector:5003. Fuori da Docker: SENSOR_URL=http://127.0.0.1:5003
+        self.sensor_url = os.getenv("SENSOR_URL", "http://sensor-connector:5003")
         self.bot = telepot.Bot(self.tokenBot)
         
         self.pending_registrations = {}
-        
+
+        # Comandi di testo -> callback_data dei pulsanti
+        self.commands = {
+            "/vitals": "vitals",
+            "/reminders": "reminders",
+            "/appointments": "appointments",
+            "/stats": "stats",
+            "/alerts": "alerts",
+            "/profile": "profile"
+        }
+
         self.client = MyMQTT("TelegramBot_03", broker, port, self)
         self.client.start()
 
@@ -63,17 +76,58 @@ class PatientMonitoringBot:
                     print(f"update_appointment fallito: {update.status_code} {update.text}")
                     return
 
-                self.bot.sendMessage(chatID, f"Your doctor confirmed your appointment on {date} at {app_time}.")
+                conferma = f"Your doctor confirmed your appointment on {date} at {app_time}."
+                self.bot.sendMessage(chatID, conferma)
+                # la conferma resta visibile anche nella sezione Alerts
+                self.save_alert(chatID, conferma)
                 print(f"Message sent to {chatID}")
 
             # 2. Caso: Alert dai sensori (se previsto nel tuo sistema)
             elif "alert" in topic:
                 chatID = msg_data.get("chatID")
                 testo = msg_data.get("msg", "Attenzione: Alert rilevato!")
-                self.bot.sendMessage(chatID, f"ALERT: {testo}")
+                # Reminder della pastiglia: messaggio con i pulsanti di risposta
+                if "Reminder for your medicine" in testo:
+                    self.send_medicine_reminder(chatID, testo)
+                else:
+                    self.bot.sendMessage(chatID, f"ALERT: {testo}")
 
         except Exception as e:
             print(f"Errore nel processare il messaggio MQTT: {e}")
+
+    # Salva un alert nel profilo del paziente sul catalog (campo "alerts")
+    def save_alert(self, chatID, message):
+        user = requests.get(f"{self.catalog_url}/search_patient?chatID={chatID}").json()
+        alerts = user.get("alerts", [])
+        alerts.append({
+            "message": message,
+            "timestamp": datetime.now(ZoneInfo("Europe/Rome")).strftime("%d-%m-%Y %H:%M")
+        })
+        res = requests.put(f"{self.catalog_url}/update_general_info", json={"chatID": chatID, "alerts": alerts})
+        if res.status_code != 200:
+            print(f"Salvataggio alert fallito: {res.status_code} {res.text}")
+
+    # Reminder della pastiglia con i pulsanti Taken / Not taken / Passed
+    def send_medicine_reminder(self, chatID, testo):
+        buttons = [[InlineKeyboardButton(text="Taken", callback_data='med_taken'),
+                    InlineKeyboardButton(text="Not taken", callback_data='med_not_taken'),
+                    InlineKeyboardButton(text="Passed", callback_data='med_passed')]]
+        self.bot.sendMessage(chatID, f"ALERT: {testo}", reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons))
+
+    # Risposta al reminder: Taken/Passed chiudono, Not taken lo rimanda dopo 5 minuti
+    def manage_medicine_answer(self, chatID, message, answer):
+        # tolgo i pulsanti dal messaggio a cui ha risposto
+        try:
+            self.bot.editMessageReplyMarkup((chatID, message['message_id']), reply_markup=None)
+        except Exception as e:
+            print(f"[reminder] {type(e).__name__}: {e}")
+
+        if answer == 'med_not_taken':
+            testo = message.get('text', '').replace("ALERT: ", "", 1)
+            threading.Timer(300, self.send_medicine_reminder, args=(chatID, testo)).start()
+            self.bot.sendMessage(chatID, "The reminder will be resent in 5 minutes")
+
+        self.send_main_menu(chatID)
 
     def on_chat_message(self, msg):
         content_type, chat_type, chatID = telepot.glance(msg)
@@ -98,6 +152,10 @@ class PatientMonitoringBot:
                 print(f"[/start] {type(e).__name__}: {e}")   # causa reale
                 self.bot.sendMessage(chatID, f"Error connecting Catalog ({type(e).__name__}).")
 
+        # Comandi di testo: stessa azione del pulsante corrispondente
+        elif message_text in self.commands:
+            self.manage_action(chatID, self.commands[message_text])
+
     # Registration or request
     def manage_registration(self, chatID, text):
         state = self.pending_registrations[chatID]
@@ -111,7 +169,19 @@ class PatientMonitoringBot:
             self.bot.sendMessage(chatID, "What is your doctor name? (Name and Surname)")
             state["step"] = 3
         elif state["step"] == 3:
-            state["doctor"] = text
+            # Check: il medico deve esistere nel catalog
+            try:
+                doctors = requests.get(f"{self.catalog_url}/get_doctors").json()
+            except Exception as e:
+                print(f"[get_doctors] {type(e).__name__}: {e}")
+                self.bot.sendMessage(chatID, f"Error connecting Catalog ({type(e).__name__}). Write your doctor name again:")
+                return
+            doctor = next((d for d in doctors if d["name"].strip().lower() == text.strip().lower()), None)
+            if doctor is None:
+                names = ", ".join(d["name"] for d in doctors)
+                self.bot.sendMessage(chatID, f"Doctor not found. Available doctors: {names}\nWhat is your doctor name? (Name and Surname)")
+                return
+            state["doctor"] = doctor["name"]   # salvato come scritto nel catalog
             self.bot.sendMessage(chatID, "Name of your biomedical sensor (es. sensor01):")
             state["step"] = 4
         elif state["step"] == 4:
@@ -197,43 +267,58 @@ class PatientMonitoringBot:
         keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
         self.bot.sendMessage(chatID, text=f"What do you need to do?\n(In the menu you can see what each button do) ", reply_markup=keyboard)
 
+    # True se la data è precedente a oggi (TBD o formati sconosciuti restano visibili)
+    def is_past_appointment(self, a):
+        date = a.get("date") if isinstance(a, dict) else a
+        for fmt in ("%d-%m-%Y", "%Y-%m-%d", "%d/%m/%Y"):
+            try:
+                return datetime.strptime(str(date), fmt).date() < datetime.now().date()
+            except ValueError:
+                pass
+        return False
+
     def on_callback_query(self, msg):
         query_id, chatID, query_data = telepot.glance(msg, flavor='callback_query')
-        
-        # VITALS:      (da collegare al sensore, per ora dati random)
+        # conferma il click a Telegram, cosi il pulsante non resta evidenziato
+        self.bot.answerCallbackQuery(query_id)
+
+        # Pulsanti del reminder della pastiglia
+        if query_data in ('med_taken', 'med_not_taken', 'med_passed'):
+            self.manage_medicine_answer(chatID, msg['message'], query_data)
+            return
+
+        self.manage_action(chatID, query_data)
+
+    # Azioni comuni a pulsanti e comandi di testo
+    def manage_action(self, chatID, query_data):
+        # VITALS:      (collegato al sensor_connector)
         if query_data == 'vitals':
-            data = {
-                "heartrate" : random.randint(60, 100),
-                "temperature": round(random.uniform(35.5, 37)),
-                "blood_pressure": f"{random.randint(115, 130)}/{random.randint(80, 85)}"
-            }
-            msg = (f"Latest Vital Signs:\n\n"
-                    f"Heart rate: {data['heartrate']} bpm\n"
-                    f"Temperature: {data['temperature']} °C\n"
-                    f"Blood Pressure: {data['blood_pressure']} mmHg")
-            self.bot.sendMessage(chatID, msg, parse_mode='Markdown')
+            try:
+                # sensorID del paziente dal catalog, poi ultima lettura dal sensor_connector
+                user = requests.get(f"{self.catalog_url}/search_patient?chatID={chatID}").json()
+                sensorID = user.get("sensorID")
+                res = requests.get(f"{self.sensor_url}/sensors/{sensorID}/latest")
+
+                if res.status_code == 200:
+                    data = res.json()
+                    msg = (f"Latest Vital Signs:\n\n"
+                            f"Heart rate: {data['heart_rate']} bpm\n"
+                            f"Temperature: {data['body_temperature']} °C\n"
+                            f"Blood Pressure: {data['blood_pressure_systolic']}/{data['blood_pressure_diastolic']} mmHg")
+                    self.bot.sendMessage(chatID, msg, parse_mode='Markdown')
+                else:
+                    self.bot.sendMessage(chatID, "Dati non disponibili al momento.")
+            except Exception as e:
+                self.bot.sendMessage(chatID, f"Connection error: {e}")
             self.send_main_menu(chatID)
-            '''
-            # collegamento al sensore:
-            res = requests.get(f"{self.catalog_url}/get_latest_vitals?sensorID={sensorID}")
-            
-            if res.status_code == 200:
-                data = res.json()
-                msg = (f"Latest Vital Signs:\n\n"
-                    f"Heart rate: {data['heartrate']} bpm\n"
-                    f"Temperature: {data['temperature']} °C\n"
-                    f"Blood Pressure: {data['blood_pressure']} mmHg")
-                self.bot.sendMessage(chatID, msg, parse_mode='Markdown')
-            else:
-                self.bot.sendMessage(chatID, "Dati non disponibili al momento.")
-            '''
-        
+
         # APPOINTMENTS:
         elif query_data == 'appointments':
             res = requests.get(f"{self.catalog_url}/get_appointments?chatID={chatID}")
             data = res.json()
             doctor = data.get("doctor")
-            appointments = data.get("appointments", [])
+            # nasconde gli appuntamenti con data precedente a oggi
+            appointments = [a for a in data.get("appointments", []) if not self.is_past_appointment(a)]
             
             if not appointments:
                 text = f"No appointments found with doctor {doctor}."
@@ -299,11 +384,13 @@ class PatientMonitoringBot:
         elif query_data == 'stats':
             # da fare
             self.bot.sendMessage(chatID, "Ecco il tuo trend settimanale: [Link ThingSpeak]")
+            self.send_main_menu(chatID)
         
         # ALERTS: (creare gli alert del sensore o gli alert inviati direttamente dal dottore)
         elif query_data == 'alerts':
-            res = requests.get(f"{self.catalog_url}/get_alerts?chatID={chatID}")
-            alerts = res.json() if res.status_code == 200 else []
+            # gli alert sono salvati nel profilo del paziente (vedi save_alert)
+            res = requests.get(f"{self.catalog_url}/search_patient?chatID={chatID}")
+            alerts = res.json().get("alerts", []) if res.status_code == 200 else []
             
             if not alerts:
                 text = "No alerts found."
@@ -334,8 +421,10 @@ class PatientMonitoringBot:
                     self.bot.sendMessage(chatID, msg, parse_mode='Markdown', reply_markup=keyboard)
                 else:
                     self.bot.sendMessage(chatID, "Profile not found. Please register again.")
+                    self.send_main_menu(chatID)
             except Exception as e:
                 self.bot.sendMessage(chatID, f"Connection error: {e}")
+                self.send_main_menu(chatID)
         elif query_data == 'edit_profile':
             self.bot.sendMessage(chatID, "Let's update your profile. What's your name? (Name and Surname)")
             self.pending_registrations[chatID] = {"step": 1}

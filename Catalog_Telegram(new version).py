@@ -384,8 +384,12 @@ class CatalogService:
 
         # APPOINTMENTS with Node-RED:
         elif path[0] == "get_pending_requests":
+            # filtro per medico (dopo il login su Node-RED), senza parametro li mostra tutti
+            doctor_name = params.get("doctor_name", None)
             pending = []
             for p in self.data["patients"]:
+                if doctor_name is not None and p.get("doctor") != doctor_name:
+                    continue
                 for app in p.get("appointments", []):
                     # Verifica che sia un dizionario e che sia pending
                     if isinstance(app, dict) and app.get("status") == "pending":
@@ -418,8 +422,12 @@ class CatalogService:
         #]
   
         elif  path[0] == "get_confirmed_appointments":
+            # filtro per medico (dopo il login su Node-RED), senza parametro li mostra tutti
+            doctor_name = params.get("doctor_name", None)
             confirmed = []
             for p in self.data["patients"]:
+                if doctor_name is not None and p.get("doctor") != doctor_name:
+                    continue
                 appointments_list = p.get("appointments", [])
                 for app in appointments_list:
                     # CASO 1: Nuovo formato (dizionario con status)
@@ -466,7 +474,17 @@ class CatalogService:
                         "chatID": p["chatID"]
                     })
             return json.dumps(patient_list)
-        
+
+        # DOCTORS: lista dei medici senza credenziali (usata dal bot per controllare il nome)
+        elif path[0] == "get_doctors":
+            doctors = []
+            for d in self.data.get("doctors", []):
+                doctors.append({
+                    "doctorID": d.get("doctorID"),
+                    "name": d.get("name")
+                })
+            return json.dumps(doctors)
+
         else:
             raise cherrypy.HTTPError(400, "Bad request")
 
@@ -581,6 +599,20 @@ class CatalogService:
                     "chatID": p["chatID"]
                 })
             return json.dumps(patient_list)
+
+        # LOGIN DOCTOR (Node-RED): controlla username/password nella sezione doctors
+        elif path[0] == "login_doctor":
+            body = json.loads(cherrypy.request.body.read())
+            username = body.get("username")
+            password = body.get("password")
+
+            for d in self.data.get("doctors", []):
+                if d.get("username") == username and d.get("password") == password:
+                    return json.dumps({
+                        "doctorID": d.get("doctorID"),
+                        "name": d.get("name")
+                    })
+            raise cherrypy.HTTPError(401, "Wrong username or password")
 
 
 
