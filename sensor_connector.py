@@ -13,7 +13,9 @@ Responsibilities:
   - Data Generator integration: creates one SimulatedSensor instance per
     known sensorID, and runs a background daemon thread
     (run_simulation_loop) that periodically generates a reading for each
-    and feeds it into update_reading().
+    and feeds it into update_reading(). Each simulator's condition is read
+    from the Health Catalog (the "condition" field of each patient),
+    defaulting to "healthy".
   - MQTT Publisher: every reading that flows through update_reading()
     (currently only from the simulation loop, since the manual POST
     endpoint no longer exists) is also published to the Message Broker, on
@@ -32,7 +34,7 @@ import time
 import cherrypy
 import requests
 
-from Data_generator import SimulatedSensor
+from Data_generator import SimulatedSensor, CONDITION_PROFILES
 from MyMQTT import MyMQTT
 
 # ─── Logging ────────────────────────────────────────────────────────────────
@@ -52,17 +54,6 @@ SIMULATION_INTERVAL_SECONDS = 5
 # startup so the REST provider endpoints keep working regardless.
 mqtt_config: dict = {}
 known_sensor_ids: list[str] = []
-
-PATIENT_CONDITIONS = {
-    "sensor2594": "tachycardia",
-    "sensor1": "hypertension",
-    "Sensor05": "bradycardia",
-    "sensor_02": "hypotension",
-    "sensor99": "hyperthyroidism",
-    "sensor_01": "hypothyroidism",
-    "sensor_03": "diabetes",
-    "sensor_Bau": "renal_failure",
-}
 
 # ─── MQTT publisher (connected once at startup) ───────────────────────────────
 # Populated by connect_mqtt_publisher() in main(). Stays None if mqtt_config
@@ -188,13 +179,15 @@ def fetch_catalog_config(catalog_url: str) -> dict | None:
     return None
 
 
-def fetch_known_patients(catalog_url: str) -> list[str] | None:
+def fetch_known_patients(catalog_url: str) -> dict[str, str] | None:
     """
-    Retrieve the sensorIDs of all patients currently registered in the
-    Health Catalog.
+    Retrieve the sensorIDs and conditions of all patients currently
+    registered in the Health Catalog.
 
-    Returns the list of sensorIDs on success (patients missing a sensorID
-    are skipped), or None (instead of raising) if the catalog is still
+    Returns a dict {sensorID: condition} on success (patients missing a
+    sensorID or with sensorID "N/A" are skipped; a missing condition
+    defaults to "healthy", and an unknown one is logged and replaced with
+    "healthy"), or None (instead of raising) if the catalog is still
     unreachable after all retries.
     """
     for attempt in range(10):
@@ -202,10 +195,19 @@ def fetch_known_patients(catalog_url: str) -> list[str] | None:
             resp = requests.get(f"{catalog_url}/get_all_patients", timeout=5)
             resp.raise_for_status()
             patients = resp.json()
-            return [
-                p["sensorID"] for p in patients
-                if p.get("sensorID") and p["sensorID"].strip().upper() != "N/A"
-            ]
+            conditions = {}
+            for p in patients:
+                if not p.get("sensorID") or p["sensorID"].strip().upper() == "N/A":
+                    continue
+                condition = p.get("condition", "healthy")
+                if condition not in CONDITION_PROFILES:
+                    log.warning(
+                        "Unknown condition '%s' for sensor %s — using 'healthy' instead",
+                        condition, p["sensorID"],
+                    )
+                    condition = "healthy"
+                conditions[p["sensorID"]] = condition
+            return conditions
         except Exception as exc:
             log.warning("Catalog not ready (attempt %d/10): %s", attempt + 1, exc)
             time.sleep(3)
@@ -291,13 +293,16 @@ def main():
         )
         known_sensor_ids = []
     else:
-        known_sensor_ids = patients
+        known_sensor_ids = list(patients.keys())
         log.info("Known sensor IDs retrieved from catalog: %d found", len(known_sensor_ids))
 
+    patient_conditions = patients if patients is not None else {}
     simulators = {
-        sensor_id: SimulatedSensor(sensor_id, condition=PATIENT_CONDITIONS.get(sensor_id, "healthy"))
-        for sensor_id in known_sensor_ids
+        sensor_id: SimulatedSensor(sensor_id, condition=condition)
+        for sensor_id, condition in patient_conditions.items()
     }
+    for sensor_id, condition in patient_conditions.items():
+        log.info("Simulator created for %s with condition '%s'", sensor_id, condition)
     log.info("%d simulator(s) created", len(simulators))
     if not simulators:
         log.warning(

@@ -288,7 +288,8 @@ class CatalogService:
                         "name": p["name"],
                         "birthdate": p.get("birthdate", "N/A"),
                         "sensorID": p.get("sensorID", "N/A"),
-                        "chatID": p["chatID"]
+                        "chatID": p["chatID"],
+                        "condition": p.get("condition", "healthy")
                     })
             return json.dumps(patient_list)
 
