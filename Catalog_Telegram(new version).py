@@ -42,6 +42,8 @@ except ModuleNotFoundError:  # pragma: no cover - fallback for environments with
 
 import json
 import logging
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 
 
@@ -76,6 +78,15 @@ class CatalogService:
         except Exception as e:
             log.error("Error saving database: %s", e)
             raise cherrypy.HTTPError(500, f"Database save failed: {e}")
+
+    # Converte la data di un appuntamento: nel database ci sono "25-07-2026", da Node-RED arriva "2026-09-30"
+    def parse_date(self, date):
+        for fmt in ("%d-%m-%Y", "%Y-%m-%d", "%d/%m/%Y"):
+            try:
+                return datetime.strptime(str(date), fmt).date()
+            except ValueError:
+                pass
+        return None
 
     def find_patient_by_id(self, patient_id):
         #Find patient by chatID
@@ -424,6 +435,7 @@ class CatalogService:
         elif  path[0] == "get_confirmed_appointments":
             # filtro per medico (dopo il login su Node-RED), senza parametro li mostra tutti
             doctor_name = params.get("doctor_name", None)
+            today = datetime.now(ZoneInfo("Europe/Rome")).date()
             confirmed = []
             for p in self.data["patients"]:
                 if doctor_name is not None and p.get("doctor") != doctor_name:
@@ -432,29 +444,45 @@ class CatalogService:
                 for app in appointments_list:
                     # CASO 1: Nuovo formato (dizionario con status)
                     if isinstance(app, dict) and app.get("status") == "confirmed":
-                        confirmed.append({
-                            "date": app.get("date", "TBD"),
-                            "time": app.get("time", "TBD"),
-                            "name": p["name"]
-                        })
-                        
+                        date = app.get("date", "TBD")
+                        time = app.get("time", "TBD")
+                        reason = app.get("reason", "")
+
                     # CASO 2: Vecchio formato (solo la stringa della data)
                     elif isinstance(app, str):
-                        confirmed.append({
-                            "date": app,
-                            "time": "TBD",
-                            "name": p["name"]
-                        })
+                        date = app
+                        time = "TBD"
+                        reason = ""
+                    else:
+                        continue
+
+                    # nasconde gli appuntamenti passati (le date non leggibili restano visibili)
+                    day = self.parse_date(date)
+                    if day is not None and day < today:
+                        continue
+
+                    confirmed.append((day or datetime.max.date(), time, {
+                        "date": date,
+                        "day": day.strftime("%a %d %b %Y") if day else date,   # es. Wed 30 Sep 2026
+                        "time": time,
+                        "name": p["name"],
+                        "reason": reason
+                    }))
 
             # IF NO APPOINTMENTS:
             if len(confirmed) == 0:
                 nessun_appuntamento = [{
                     "date": "-",
+                    "day": "-",
                     "time": "-",
-                    "name": "No appointments"
+                    "name": "No upcoming appointments",
+                    "reason": ""
                 }]
                 return json.dumps(nessun_appuntamento)
-            return json.dumps(confirmed)
+
+            # ordinati per data e ora, dal più vicino
+            confirmed.sort(key=lambda c: (c[0], c[1]))
+            return json.dumps([c[2] for c in confirmed])
         
         # Ritorna tutti i pazienti (filtrabili per dottore se passi il parametro)
         elif path[0] == "get_all_patients":
