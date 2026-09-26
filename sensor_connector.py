@@ -54,14 +54,14 @@ mqtt_config: dict = {}
 known_sensor_ids: list[str] = []
 
 PATIENT_CONDITIONS = {
-    "sensor2594": "tachicardia",
-    "sensor1": "ipertensione",
-    "Sensor05": "bradicardia",
-    "sensor_02": "ipotensione",
-    "sensor99": "ipertiroidismo",
-    "sensor_01": "ipotiroidismo",
-    "sensor_03": "diabete",
-    "sensor_Bau": "insufficienza_renale",
+    "sensor2594": "tachycardia",
+    "sensor1": "hypertension",
+    "Sensor05": "bradycardia",
+    "sensor_02": "hypotension",
+    "sensor99": "hyperthyroidism",
+    "sensor_01": "hypothyroidism",
+    "sensor_03": "diabetes",
+    "sensor_Bau": "renal_failure",
 }
 
 # ─── MQTT publisher (connected once at startup) ───────────────────────────────

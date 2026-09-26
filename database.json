@@ -18,7 +18,26 @@
             "name": "Diana Giulia Cheban",
             "birthdate": "24/08/2003",
             "doctor": "Luca Bianco",
-            "sensorID": "sensor2594",
+            "sensorID": "sensor01",
+            "condition": "healthy",
+            "thresholds": {
+                "heart_rate": {
+                    "min": 60,
+                    "max": 100
+                },
+                "body_temperature": {
+                    "min": 36.0,
+                    "max": 37.5
+                },
+                "blood_pressure_systolic": {
+                    "min": 90,
+                    "max": 140
+                },
+                "blood_pressure_diastolic": {
+                    "min": 60,
+                    "max": 90
+                }
+            },
             "reminders": [
                 {
                     "medicine_name": "prova2",
@@ -67,37 +86,80 @@
             "name": "matteo costamagna",
             "birthdate": "20062003",
             "doctor": "diana cheban",
-            "sensorID": "sensor1"
-        },
-        {
-            "chatID": 6596242418,
-            "name": "Giovanni Giordano",
-            "birthdate": "05/12/2000",
-            "doctor": "Diana White",
-            "sensorID": "Sensor05"
-        },
-        {
-            "chatID": 9988776655,
-            "name": "Mario Rossi",
-            "birthdate": "12/05/1990",
-            "doctor": "Luca Bianco",
-            "sensorID": "sensor99",
+            "sensorID": "sensor02",
+            "condition": "healthy",
             "thresholds": {
                 "heart_rate": {
                     "min": 60,
                     "max": 100
                 },
                 "body_temperature": {
-                    "min": 35.5,
+                    "min": 36.0,
                     "max": 37.5
                 },
                 "blood_pressure_systolic": {
                     "min": 90,
-                    "max": 130
+                    "max": 140
                 },
                 "blood_pressure_diastolic": {
                     "min": 60,
-                    "max": 85
+                    "max": 90
+                }
+            },
+            "reminders": [],
+            "appointments": []
+        },
+        {
+            "chatID": 6596242418,
+            "name": "Giovanni Giordano",
+            "birthdate": "05/12/2000",
+            "doctor": "Diana White",
+            "sensorID": "sensor03",
+            "condition": "healthy",
+            "thresholds": {
+                "heart_rate": {
+                    "min": 60,
+                    "max": 100
+                },
+                "body_temperature": {
+                    "min": 36.0,
+                    "max": 37.5
+                },
+                "blood_pressure_systolic": {
+                    "min": 90,
+                    "max": 140
+                },
+                "blood_pressure_diastolic": {
+                    "min": 60,
+                    "max": 90
+                }
+            },
+            "reminders": [],
+            "appointments": []
+        },
+        {
+            "chatID": 9988776655,
+            "name": "Mario Rossi",
+            "birthdate": "12/05/1990",
+            "doctor": "Luca Bianco",
+            "sensorID": "sensor04",
+            "condition": "diabetes",
+            "thresholds": {
+                "heart_rate": {
+                    "min": 60,
+                    "max": 100
+                },
+                "body_temperature": {
+                    "min": 36.0,
+                    "max": 37.5
+                },
+                "blood_pressure_systolic": {
+                    "min": 90,
+                    "max": 165
+                },
+                "blood_pressure_diastolic": {
+                    "min": 60,
+                    "max": 110
                 }
             },
             "reminders": [],
@@ -111,18 +173,19 @@
             ]
         },
         {
-            "chatID": 9988776655,
-            "name": "Mario Rossi",
+            "chatID": 9988776656,
+            "name": "Marco Rossi",
             "birthdate": "1985-05-12",
             "doctor": "Dr. Smith",
-            "sensorID": "sensor_01",
+            "sensorID": "sensor05",
+            "condition": "hypothyroidism",
             "thresholds": {
                 "heart_rate": {
-                    "min": 60,
+                    "min": 40,
                     "max": 100
                 },
                 "body_temperature": {
-                    "min": 36.0,
+                    "min": 35.5,
                     "max": 37.5
                 },
                 "blood_pressure_systolic": {
@@ -142,7 +205,8 @@
             "name": "Mario Bianchi",
             "birthdate": "1985-05-12",
             "doctor": "Dr. Smith",
-            "sensorID": "sensor_03",
+            "sensorID": "sensor06",
+            "condition": "hypertension",
             "thresholds": {
                 "heart_rate": {
                     "min": 60,
@@ -154,11 +218,11 @@
                 },
                 "blood_pressure_systolic": {
                     "min": 90,
-                    "max": 140
+                    "max": 165
                 },
                 "blood_pressure_diastolic": {
                     "min": 60,
-                    "max": 90
+                    "max": 110
                 }
             },
             "reminders": [],
@@ -169,23 +233,24 @@
             "name": "Lucia Rossi",
             "birthdate": "1990-06-3",
             "doctor": "Dr. Smith",
-            "sensorID": "sensor_02",
+            "sensorID": "sensor07",
+            "condition": "hyperthyroidism",
             "thresholds": {
                 "heart_rate": {
                     "min": 60,
-                    "max": 100
+                    "max": 125
                 },
                 "body_temperature": {
                     "min": 36.0,
-                    "max": 37.5
+                    "max": 37.8
                 },
                 "blood_pressure_systolic": {
                     "min": 90,
-                    "max": 140
+                    "max": 165
                 },
                 "blood_pressure_diastolic": {
                     "min": 60,
-                    "max": 90
+                    "max": 110
                 }
             },
             "reminders": [],
@@ -196,7 +261,8 @@
             "name": "Pluto",
             "birthdate": "ieri",
             "doctor": "pippo",
-            "sensorID": "sensor_PL",
+            "sensorID": "sensor08",
+            "condition": "healthy",
             "thresholds": {
                 "heart_rate": {
                     "min": 60,
@@ -224,6 +290,7 @@
             "birthdate": "1939, LA",
             "doctor": "Dr. Mouse",
             "sensorID": "N/A",
+            "condition": "healthy",
             "thresholds": {
                 "heart_rate": {
                     "min": 60,
@@ -281,11 +348,12 @@
             "name": "Pippo",
             "birthdate": "1939",
             "doctor": "Topolino",
-            "sensorID": "sensor_Bau",
+            "sensorID": "sensor09",
+            "condition": "renal_failure",
             "thresholds": {
                 "heart_rate": {
                     "min": 60,
-                    "max": 100
+                    "max": 110
                 },
                 "body_temperature": {
                     "min": 36.0,
@@ -293,11 +361,11 @@
                 },
                 "blood_pressure_systolic": {
                     "min": 90,
-                    "max": 140
+                    "max": 175
                 },
                 "blood_pressure_diastolic": {
                     "min": 60,
-                    "max": 90
+                    "max": 120
                 }
             },
             "reminders": [

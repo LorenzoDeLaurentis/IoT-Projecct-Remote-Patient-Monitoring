@@ -77,14 +77,14 @@ def simulate_blood_pressure(heart_rate, high_hr_signal=False, K=0.5, sys_baselin
 # hypertension + mild tachycardia pattern common in decompensated type-2 diabetes.
 CONDITION_PROFILES = {
     "healthy":              {"hr_mean": 72,  "hr_std": 3, "sys_baseline": 120, "temp_offset": 0.0},
-    "tachicardia":          {"hr_mean": 95,  "hr_std": 5, "sys_baseline": 120, "temp_offset": 0.0},
-    "bradicardia":          {"hr_mean": 50,  "hr_std": 3, "sys_baseline": 120, "temp_offset": 0.0},
-    "ipertensione":         {"hr_mean": 72,  "hr_std": 3, "sys_baseline": 150, "temp_offset": 0.0},
-    "ipotensione":          {"hr_mean": 72,  "hr_std": 3, "sys_baseline": 80,  "temp_offset": 0.0},
-    "ipertiroidismo":       {"hr_mean": 102, "hr_std": 5, "sys_baseline": 135, "temp_offset": 0.3},
-    "ipotiroidismo":        {"hr_mean": 52,  "hr_std": 3, "sys_baseline": 120, "temp_offset": -0.5},
-    "diabete":              {"hr_mean": 85,  "hr_std": 4, "sys_baseline": 145, "temp_offset": 0.0},
-    "insufficienza_renale": {"hr_mean": 90,  "hr_std": 4, "sys_baseline": 155, "temp_offset": 0.0},
+    "tachycardia":          {"hr_mean": 95,  "hr_std": 5, "sys_baseline": 120, "temp_offset": 0.0},
+    "bradycardia":          {"hr_mean": 50,  "hr_std": 3, "sys_baseline": 120, "temp_offset": 0.0},
+    "hypertension":         {"hr_mean": 72,  "hr_std": 3, "sys_baseline": 150, "temp_offset": 0.0},
+    "hypotension":          {"hr_mean": 72,  "hr_std": 3, "sys_baseline": 80,  "temp_offset": 0.0},
+    "hyperthyroidism":      {"hr_mean": 102, "hr_std": 5, "sys_baseline": 135, "temp_offset": 0.3},
+    "hypothyroidism":       {"hr_mean": 52,  "hr_std": 3, "sys_baseline": 120, "temp_offset": -0.5},
+    "diabetes":             {"hr_mean": 85,  "hr_std": 4, "sys_baseline": 145, "temp_offset": 0.0},
+    "renal_failure":        {"hr_mean": 90,  "hr_std": 4, "sys_baseline": 155, "temp_offset": 0.0},
 }
 
 
