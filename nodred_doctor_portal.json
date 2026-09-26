@@ -635,7 +635,7 @@
         "autocols": false,
         "showSearch": true,
         "deselect": true,
-        "selectionType": "none",
+        "selectionType": "click",
         "columns": [
             {
                 "title": "Patient Name",
@@ -669,7 +669,9 @@
         "x": 510,
         "y": 360,
         "wires": [
-            []
+            [
+                "d4f6b8c0e2a30010"
+            ]
         ]
     },
     {
@@ -1027,6 +1029,617 @@
                 "f1df2884ecb2cf8e",
                 "a1c3e5f7b9d20002"
             ]
+        ]
+    },
+    {
+        "id": "d4f6b8c0e2a30001",
+        "type": "ui-page",
+        "name": "Patient Detail",
+        "ui": "56556cda8fa1a52e",
+        "path": "/patient",
+        "icon": "account",
+        "layout": "grid",
+        "theme": "e50a68f84d1fd009",
+        "breakpoints": [
+            {
+                "name": "Default",
+                "px": "0",
+                "cols": "3"
+            },
+            {
+                "name": "Tablet",
+                "px": "576",
+                "cols": "6"
+            },
+            {
+                "name": "Small Desktop",
+                "px": "768",
+                "cols": "9"
+            },
+            {
+                "name": "Desktop",
+                "px": "1024",
+                "cols": "12"
+            }
+        ],
+        "order": 4,
+        "className": "",
+        "visible": "false",
+        "disabled": "false"
+    },
+    {
+        "id": "d4f6b8c0e2a30002",
+        "type": "ui-group",
+        "name": "Navigation",
+        "page": "d4f6b8c0e2a30001",
+        "width": 12,
+        "height": 1,
+        "order": 1,
+        "showTitle": false,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "d4f6b8c0e2a30003",
+        "type": "ui-group",
+        "name": "Patient Info",
+        "page": "d4f6b8c0e2a30001",
+        "width": 6,
+        "height": 1,
+        "order": 2,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "d4f6b8c0e2a30004",
+        "type": "ui-group",
+        "name": "Doctor Notes",
+        "page": "d4f6b8c0e2a30001",
+        "width": 6,
+        "height": 1,
+        "order": 3,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "d4f6b8c0e2a30010",
+        "type": "change",
+        "z": "98eab5396367cef7",
+        "name": "Open patient",
+        "rules": [
+            {
+                "t": "set",
+                "p": "selectedPatient",
+                "pt": "flow",
+                "to": "payload.chatID",
+                "tot": "msg"
+            },
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "{}",
+                "tot": "json"
+            },
+            {
+                "t": "set",
+                "p": "payload.chatID",
+                "pt": "msg",
+                "to": "selectedPatient",
+                "tot": "flow"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 290,
+        "y": 480,
+        "wires": [
+            [
+                "d4f6b8c0e2a30011",
+                "d4f6b8c0e2a30013"
+            ]
+        ]
+    },
+    {
+        "id": "d4f6b8c0e2a30011",
+        "type": "http request",
+        "z": "98eab5396367cef7",
+        "name": "Get patient",
+        "method": "GET",
+        "ret": "obj",
+        "paytoqs": "query",
+        "url": "http://host.docker.internal:8080/search_patient",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 490,
+        "y": 480,
+        "wires": [
+            [
+                "d4f6b8c0e2a30012",
+                "d4f6b8c0e2a30020"
+            ]
+        ]
+    },
+    {
+        "id": "d4f6b8c0e2a30012",
+        "type": "ui-markdown",
+        "z": "98eab5396367cef7",
+        "group": "d4f6b8c0e2a30003",
+        "name": "Patient Info",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "content": "### {{msg.payload.name}}\n\n**Birthdate:** {{msg.payload.birthdate}}  \n**Sensor ID:** {{msg.payload.sensorID}}  \n**Condition:** {{msg.payload.condition}}  \n**Doctor:** {{msg.payload.doctor}}\n",
+        "className": "",
+        "x": 700,
+        "y": 480,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "d4f6b8c0e2a30013",
+        "type": "change",
+        "z": "98eab5396367cef7",
+        "name": "Go to patient page",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "{\"page\":\"Patient Detail\"}",
+                "tot": "json"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 510,
+        "y": 540,
+        "wires": [
+            [
+                "a3b3d05cda5322eb"
+            ]
+        ]
+    },
+    {
+        "id": "d4f6b8c0e2a30014",
+        "type": "ui-button",
+        "z": "98eab5396367cef7",
+        "group": "d4f6b8c0e2a30002",
+        "name": "Back to patients",
+        "label": "← Back to patients",
+        "order": 1,
+        "width": 3,
+        "height": 1,
+        "emulateClick": false,
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "className": "",
+        "icon": "",
+        "iconPosition": "left",
+        "payload": "",
+        "payloadType": "str",
+        "topic": "topic",
+        "topicType": "msg",
+        "buttonColor": "",
+        "textColor": "",
+        "iconColor": "",
+        "enableClick": true,
+        "enablePointerdown": false,
+        "pointerdownPayload": "",
+        "pointerdownPayloadType": "str",
+        "enablePointerup": false,
+        "pointerupPayload": "",
+        "pointerupPayloadType": "str",
+        "x": 290,
+        "y": 600,
+        "wires": [
+            [
+                "d4f6b8c0e2a30015"
+            ]
+        ]
+    },
+    {
+        "id": "d4f6b8c0e2a30015",
+        "type": "change",
+        "z": "98eab5396367cef7",
+        "name": "Back",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "{\"page\":\"Doctor Page\"}",
+                "tot": "json"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 510,
+        "y": 600,
+        "wires": [
+            [
+                "a3b3d05cda5322eb"
+            ]
+        ]
+    },
+    {
+        "id": "d4f6b8c0e2a30020",
+        "type": "switch",
+        "z": "98eab5396367cef7",
+        "name": "Has notes?",
+        "property": "payload.notes",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "nnull"
+            },
+            {
+                "t": "else"
+            }
+        ],
+        "checkall": "false",
+        "repair": false,
+        "outputs": 2,
+        "x": 690,
+        "y": 660,
+        "wires": [
+            [
+                "d4f6b8c0e2a30021"
+            ],
+            [
+                "d4f6b8c0e2a30022"
+            ]
+        ]
+    },
+    {
+        "id": "d4f6b8c0e2a30021",
+        "type": "change",
+        "z": "98eab5396367cef7",
+        "name": "Notes",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "payload.notes",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 880,
+        "y": 640,
+        "wires": [
+            [
+                "d4f6b8c0e2a30023",
+                "d4f6b8c0e2a30024"
+            ]
+        ]
+    },
+    {
+        "id": "d4f6b8c0e2a30022",
+        "type": "change",
+        "z": "98eab5396367cef7",
+        "name": "No notes",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 880,
+        "y": 680,
+        "wires": [
+            [
+                "d4f6b8c0e2a30023",
+                "d4f6b8c0e2a30024"
+            ]
+        ]
+    },
+    {
+        "id": "d4f6b8c0e2a30023",
+        "type": "ui-text-input",
+        "z": "98eab5396367cef7",
+        "group": "d4f6b8c0e2a30004",
+        "name": "Notes",
+        "label": "Notes",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "topic": "topic",
+        "topicType": "msg",
+        "mode": "textarea",
+        "tooltip": "",
+        "delay": 300,
+        "passthru": false,
+        "sendOnDelay": true,
+        "sendOnBlur": true,
+        "sendOnEnter": false,
+        "className": "",
+        "clearable": false,
+        "sendOnClear": false,
+        "icon": "",
+        "iconPosition": "left",
+        "iconInnerPosition": "inside",
+        "x": 1080,
+        "y": 640,
+        "wires": [
+            [
+                "d4f6b8c0e2a30024"
+            ]
+        ]
+    },
+    {
+        "id": "d4f6b8c0e2a30024",
+        "type": "change",
+        "z": "98eab5396367cef7",
+        "name": "Store draft",
+        "rules": [
+            {
+                "t": "set",
+                "p": "draftNotes",
+                "pt": "flow",
+                "to": "payload",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1280,
+        "y": 660,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "d4f6b8c0e2a30025",
+        "type": "ui-button",
+        "z": "98eab5396367cef7",
+        "group": "d4f6b8c0e2a30004",
+        "name": "Save notes",
+        "label": "Save notes",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "emulateClick": false,
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "className": "",
+        "icon": "",
+        "iconPosition": "left",
+        "payload": "",
+        "payloadType": "str",
+        "topic": "topic",
+        "topicType": "msg",
+        "buttonColor": "",
+        "textColor": "",
+        "iconColor": "",
+        "enableClick": true,
+        "enablePointerdown": false,
+        "pointerdownPayload": "",
+        "pointerdownPayloadType": "str",
+        "enablePointerup": false,
+        "pointerupPayload": "",
+        "pointerupPayloadType": "str",
+        "x": 290,
+        "y": 740,
+        "wires": [
+            [
+                "d4f6b8c0e2a30026"
+            ]
+        ]
+    },
+    {
+        "id": "d4f6b8c0e2a30026",
+        "type": "change",
+        "z": "98eab5396367cef7",
+        "name": "Notes body",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "{}",
+                "tot": "json"
+            },
+            {
+                "t": "set",
+                "p": "payload.chatID",
+                "pt": "msg",
+                "to": "selectedPatient",
+                "tot": "flow"
+            },
+            {
+                "t": "set",
+                "p": "payload.notes",
+                "pt": "msg",
+                "to": "draftNotes",
+                "tot": "flow"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 480,
+        "y": 740,
+        "wires": [
+            [
+                "d4f6b8c0e2a30027"
+            ]
+        ]
+    },
+    {
+        "id": "d4f6b8c0e2a30027",
+        "type": "http request",
+        "z": "98eab5396367cef7",
+        "name": "Save notes",
+        "method": "PUT",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "http://host.docker.internal:8080/update_general_info",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 680,
+        "y": 740,
+        "wires": [
+            [
+                "d4f6b8c0e2a30028"
+            ]
+        ]
+    },
+    {
+        "id": "d4f6b8c0e2a30028",
+        "type": "switch",
+        "z": "98eab5396367cef7",
+        "name": "Saved?",
+        "property": "statusCode",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "200",
+                "vt": "num"
+            },
+            {
+                "t": "else"
+            }
+        ],
+        "checkall": "false",
+        "repair": false,
+        "outputs": 2,
+        "x": 860,
+        "y": 740,
+        "wires": [
+            [
+                "d4f6b8c0e2a30029"
+            ],
+            [
+                "d4f6b8c0e2a3002a"
+            ]
+        ]
+    },
+    {
+        "id": "d4f6b8c0e2a30029",
+        "type": "change",
+        "z": "98eab5396367cef7",
+        "name": "Notes saved",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "Notes saved",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1050,
+        "y": 720,
+        "wires": [
+            [
+                "d4f6b8c0e2a3002b"
+            ]
+        ]
+    },
+    {
+        "id": "d4f6b8c0e2a3002a",
+        "type": "change",
+        "z": "98eab5396367cef7",
+        "name": "Error saving",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "Error saving notes",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1050,
+        "y": 760,
+        "wires": [
+            [
+                "d4f6b8c0e2a3002b"
+            ]
+        ]
+    },
+    {
+        "id": "d4f6b8c0e2a3002b",
+        "type": "ui-notification",
+        "z": "98eab5396367cef7",
+        "ui": "56556cda8fa1a52e",
+        "position": "top right",
+        "colorDefault": true,
+        "color": "#000000",
+        "displayTime": "3",
+        "showCountdown": true,
+        "outputs": 1,
+        "allowDismiss": true,
+        "dismissText": "Close",
+        "allowConfirm": false,
+        "confirmText": "Confirm",
+        "raw": false,
+        "className": "",
+        "name": "Notes notification",
+        "x": 1260,
+        "y": 740,
+        "wires": [
+            []
         ]
     }
 ]
