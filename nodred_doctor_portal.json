@@ -1,0 +1,1032 @@
+[
+    {
+        "id": "03d0e8b99b1b86b1",
+        "type": "tab",
+        "label": "Flow 3",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "cb86edee6af0e6cc",
+        "type": "tab",
+        "label": "Pagina di Login",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "98eab5396367cef7",
+        "type": "tab",
+        "label": "Pagina Dottore",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "48c854e9895abc80",
+        "type": "mqtt-broker",
+        "name": "Local Mosquitto",
+        "broker": "host.docker.internal",
+        "port": 1883,
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": 4,
+        "keepalive": 60,
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "56556cda8fa1a52e",
+        "type": "ui-base",
+        "name": "Clinician Portal - Health Care Mate",
+        "path": "/dashboard",
+        "appIcon": "",
+        "includeClientData": true,
+        "acceptsClientConfig": [
+            "ui-notification",
+            "ui-control"
+        ],
+        "showPathInSidebar": false,
+        "headerContent": "page",
+        "navigationStyle": "default",
+        "titleBarStyle": "default",
+        "showReconnectNotification": true,
+        "notificationDisplayTime": 1,
+        "showDisconnectNotification": true,
+        "allowInstall": false
+    },
+    {
+        "id": "e50a68f84d1fd009",
+        "type": "ui-theme",
+        "name": "Clinician Portal - Health Care Mate",
+        "colors": {
+            "surface": "#ffffff",
+            "primary": "#2e3bd1",
+            "bgPage": "#f3f5fb",
+            "groupBg": "#ffffff",
+            "groupOutline": "#e1e4f0"
+        },
+        "sizes": {
+            "density": "default",
+            "pagePadding": "16px",
+            "groupGap": "16px",
+            "groupBorderRadius": "12px",
+            "widgetGap": "12px"
+        }
+    },
+    {
+        "id": "3ee9f8fdd0d091b1",
+        "type": "ui-page",
+        "name": "Login",
+        "ui": "56556cda8fa1a52e",
+        "path": "/login",
+        "icon": "home",
+        "layout": "notebook",
+        "theme": "e50a68f84d1fd009",
+        "breakpoints": [
+            {
+                "name": "Default",
+                "px": "0",
+                "cols": "3"
+            },
+            {
+                "name": "Tablet",
+                "px": "576",
+                "cols": "6"
+            },
+            {
+                "name": "Small Desktop",
+                "px": "768",
+                "cols": "9"
+            },
+            {
+                "name": "Desktop",
+                "px": "1024",
+                "cols": "12"
+            }
+        ],
+        "order": 1,
+        "className": "",
+        "visible": "true",
+        "disabled": "false"
+    },
+    {
+        "id": "f88ef76f95dd78ee",
+        "type": "ui-page",
+        "name": "Doctor Page",
+        "ui": "56556cda8fa1a52e",
+        "path": "/clinical_portal",
+        "icon": "home",
+        "layout": "grid",
+        "theme": "e50a68f84d1fd009",
+        "breakpoints": [
+            {
+                "name": "Default",
+                "px": "0",
+                "cols": "3"
+            },
+            {
+                "name": "Tablet",
+                "px": "576",
+                "cols": "6"
+            },
+            {
+                "name": "Small Desktop",
+                "px": "768",
+                "cols": "9"
+            },
+            {
+                "name": "Desktop",
+                "px": "1024",
+                "cols": "12"
+            }
+        ],
+        "order": 2,
+        "className": "",
+        "visible": "true",
+        "disabled": "false"
+    },
+    {
+        "id": "c4a8891c022c276e",
+        "type": "ui-group",
+        "name": " Appointment Requests",
+        "page": "f88ef76f95dd78ee",
+        "width": 6,
+        "height": 1,
+        "order": 2,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "a6b3668000f863cc",
+        "type": "ui-group",
+        "name": "Upcoming Appointments",
+        "page": "f88ef76f95dd78ee",
+        "width": 6,
+        "height": 1,
+        "order": 3,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "94f2698ccba4155d",
+        "type": "ui-group",
+        "name": "My Patients",
+        "page": "f88ef76f95dd78ee",
+        "width": 12,
+        "height": 1,
+        "order": 4,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "87c804ff4f50d6f5",
+        "type": "ui-group",
+        "name": "Doctor Login",
+        "page": "3ee9f8fdd0d091b1",
+        "width": 10,
+        "height": 1,
+        "order": 1,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "47bdd6daeaa3b2c7",
+        "type": "ui-page",
+        "name": "Create Appointment",
+        "ui": "56556cda8fa1a52e",
+        "path": "/create",
+        "icon": "home",
+        "layout": "grid",
+        "theme": "e50a68f84d1fd009",
+        "breakpoints": [
+            {
+                "name": "Default",
+                "px": "0",
+                "cols": "3"
+            },
+            {
+                "name": "Tablet",
+                "px": "576",
+                "cols": "6"
+            },
+            {
+                "name": "Small Desktop",
+                "px": "768",
+                "cols": "9"
+            },
+            {
+                "name": "Desktop",
+                "px": "1024",
+                "cols": "12"
+            }
+        ],
+        "order": 3,
+        "className": "",
+        "visible": "true",
+        "disabled": "false"
+    },
+    {
+        "id": "d043e104f5c87326",
+        "type": "ui-group",
+        "name": "Create Appointment",
+        "page": "47bdd6daeaa3b2c7",
+        "width": 6,
+        "height": 1,
+        "order": 1,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "d98af851c4e236e8",
+        "type": "ui-spacer",
+        "group": "87c804ff4f50d6f5",
+        "name": "spacer",
+        "order": 3,
+        "width": 1,
+        "height": 1,
+        "className": ""
+    },
+    {
+        "id": "d98af8c7f1cbec76",
+        "type": "ui-spacer",
+        "group": "87c804ff4f50d6f5",
+        "name": "spacer",
+        "order": 4,
+        "width": 1,
+        "height": 1,
+        "className": ""
+    },
+    {
+        "id": "0ba1890beab82999",
+        "type": "comment",
+        "z": "cb86edee6af0e6cc",
+        "name": "Idea di scalabilità:leggere",
+        "info": "Idea di scalabilità:\n\nnel database.json aggiungere la sezione:\n{\"doctors\":\n            [{\"doctorID\": 01,\n              \"username\": diana\n              \"password\": diana\n              \"patientID\": [\"tutti i chatID\"] },\n              ...\n              ]}\n\nIn questo modo si potrebbe fare una http request\nper fare il sito scalabile",
+        "x": 130,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "76c988de83361957",
+        "type": "ui-form",
+        "z": "cb86edee6af0e6cc",
+        "name": "Login",
+        "group": "87c804ff4f50d6f5",
+        "label": "",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "options": [
+            {
+                "label": "username",
+                "key": "username",
+                "type": "text",
+                "required": true,
+                "rows": null
+            },
+            {
+                "label": "password",
+                "key": "password",
+                "type": "password",
+                "required": true,
+                "rows": null
+            }
+        ],
+        "formValue": {
+            "username": "",
+            "password": ""
+        },
+        "payload": "",
+        "submit": "submit",
+        "cancel": "clear",
+        "resetOnSubmit": true,
+        "topic": "topic",
+        "topicType": "msg",
+        "splitLayout": true,
+        "className": "",
+        "passthru": false,
+        "dropdownOptions": [],
+        "x": 250,
+        "y": 400,
+        "wires": [
+            [
+                "b2d4f6a8c0e10001"
+            ]
+        ]
+    },
+    {
+        "id": "af92e714e7c7fcad",
+        "type": "change",
+        "z": "cb86edee6af0e6cc",
+        "name": "Save doctor + go",
+        "rules": [
+            {
+                "t": "set",
+                "p": "doctorName",
+                "pt": "global",
+                "to": "payload.name",
+                "tot": "msg"
+            },
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "{\"page\":\"Doctor Page\"}",
+                "tot": "json"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 830,
+        "y": 400,
+        "wires": [
+            [
+                "8526958b428bd62f"
+            ]
+        ]
+    },
+    {
+        "id": "9482d5f3845f293e",
+        "type": "switch",
+        "z": "cb86edee6af0e6cc",
+        "name": "Login OK?",
+        "property": "statusCode",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "200",
+                "vt": "num"
+            },
+            {
+                "t": "else"
+            }
+        ],
+        "checkall": "false",
+        "repair": false,
+        "outputs": 2,
+        "x": 620,
+        "y": 400,
+        "wires": [
+            [
+                "af92e714e7c7fcad"
+            ],
+            [
+                "b2d4f6a8c0e10002"
+            ]
+        ]
+    },
+    {
+        "id": "8526958b428bd62f",
+        "type": "ui-control",
+        "z": "cb86edee6af0e6cc",
+        "name": "",
+        "ui": "56556cda8fa1a52e",
+        "events": "change",
+        "x": 1060,
+        "y": 400,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "6b478992c1584727",
+        "type": "ui-markdown",
+        "z": "cb86edee6af0e6cc",
+        "group": "87c804ff4f50d6f5",
+        "name": "Immage",
+        "order": 1,
+        "width": "",
+        "height": "",
+        "content": "![Portal Logo](/logo2_login.jpg)\n",
+        "className": "",
+        "x": 200,
+        "y": 260,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "36d71bef0c01de31",
+        "type": "http request",
+        "z": "98eab5396367cef7",
+        "name": "",
+        "method": "GET",
+        "ret": "obj",
+        "paytoqs": "query",
+        "url": "http://host.docker.internal:8080/get_pending_requests",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 310,
+        "y": 140,
+        "wires": [
+            [
+                "189788b994d07f9d"
+            ]
+        ]
+    },
+    {
+        "id": "189788b994d07f9d",
+        "type": "ui-table",
+        "z": "98eab5396367cef7",
+        "group": "c4a8891c022c276e",
+        "name": "Requests",
+        "label": "",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "maxrows": 0,
+        "passthru": false,
+        "autocols": false,
+        "showSearch": true,
+        "deselect": true,
+        "selectionType": "click",
+        "columns": [
+            {
+                "title": "Patient Name",
+                "key": "name",
+                "keyType": "key",
+                "type": "text",
+                "width": "",
+                "align": "start"
+            },
+            {
+                "title": "Reason of request",
+                "key": "reason",
+                "keyType": "key",
+                "type": "text",
+                "width": "",
+                "align": "start"
+            }
+        ],
+        "mobileBreakpoint": "sm",
+        "mobileBreakpointType": "defaults",
+        "action": "replace",
+        "className": "",
+        "x": 500,
+        "y": 140,
+        "wires": [
+            [
+                "3e77c67f993067f4"
+            ]
+        ]
+    },
+    {
+        "id": "3e77c67f993067f4",
+        "type": "change",
+        "z": "98eab5396367cef7",
+        "name": "Salvare chatID",
+        "rules": [
+            {
+                "t": "set",
+                "p": "selectedChatID",
+                "pt": "flow",
+                "to": "payload.chatID",
+                "tot": "msg"
+            },
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "{\"page\": \"Create Appointment\"}",
+                "tot": "json"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 720,
+        "y": 140,
+        "wires": [
+            [
+                "a3b3d05cda5322eb"
+            ]
+        ]
+    },
+    {
+        "id": "67d76b74d4e2419d",
+        "type": "ui-form",
+        "z": "98eab5396367cef7",
+        "name": "Impost date and Time",
+        "group": "d043e104f5c87326",
+        "label": "Select date and time of the appointment",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "options": [
+            {
+                "label": "Date",
+                "key": "date",
+                "type": "date",
+                "required": true,
+                "rows": null
+            },
+            {
+                "label": "Time",
+                "key": "time",
+                "type": "time",
+                "required": true,
+                "rows": null
+            }
+        ],
+        "formValue": {
+            "date": "",
+            "time": ""
+        },
+        "payload": "",
+        "submit": "submit",
+        "cancel": "clear",
+        "resetOnSubmit": true,
+        "topic": "topic",
+        "topicType": "msg",
+        "splitLayout": true,
+        "className": "",
+        "passthru": false,
+        "dropdownOptions": [],
+        "x": 1120,
+        "y": 120,
+        "wires": [
+            [
+                "b058e30cad4ffb6b",
+                "871cc9a528dab927"
+            ]
+        ]
+    },
+    {
+        "id": "f1df2884ecb2cf8e",
+        "type": "http request",
+        "z": "98eab5396367cef7",
+        "name": "",
+        "method": "GET",
+        "ret": "obj",
+        "paytoqs": "query",
+        "url": "http://host.docker.internal:8080/get_all_patients",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 310,
+        "y": 360,
+        "wires": [
+            [
+                "5e9843515309be44"
+            ]
+        ]
+    },
+    {
+        "id": "5e9843515309be44",
+        "type": "ui-table",
+        "z": "98eab5396367cef7",
+        "group": "94f2698ccba4155d",
+        "name": "All Patients",
+        "label": "",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "maxrows": 0,
+        "passthru": false,
+        "autocols": false,
+        "showSearch": true,
+        "deselect": true,
+        "selectionType": "none",
+        "columns": [
+            {
+                "title": "Patient Name",
+                "key": "name",
+                "keyType": "key",
+                "type": "text",
+                "width": "",
+                "align": "start"
+            },
+            {
+                "title": "SensorID",
+                "key": "sensorID",
+                "keyType": "key",
+                "type": "text",
+                "width": "",
+                "align": "start"
+            },
+            {
+                "title": "Birthday",
+                "key": "birthdate",
+                "keyType": "key",
+                "type": "text",
+                "width": "",
+                "align": "start"
+            }
+        ],
+        "mobileBreakpoint": "sm",
+        "mobileBreakpointType": "defaults",
+        "action": "replace",
+        "className": "",
+        "x": 510,
+        "y": 360,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "d04f36812c4f463b",
+        "type": "inject",
+        "z": "98eab5396367cef7",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "5",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 110,
+        "y": 220,
+        "wires": [
+            [
+                "c3e5a7b9d1f20001"
+            ]
+        ]
+    },
+    {
+        "id": "a3b3d05cda5322eb",
+        "type": "ui-control",
+        "z": "98eab5396367cef7",
+        "name": "Go to nex page",
+        "ui": "56556cda8fa1a52e",
+        "events": "change",
+        "x": 900,
+        "y": 100,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "b058e30cad4ffb6b",
+        "type": "function",
+        "z": "98eab5396367cef7",
+        "name": "sending the payload",
+        "func": "let chatID = flow.get(\"selectedChatID\");\nmsg.payload.chatID = chatID;\nmsg.payload.status = \"confirmed\";\n\nmsg.topic = `clinician/patient/${chatID}/appointments/confirmation`;\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1380,
+        "y": 120,
+        "wires": [
+            [
+                "59eb54c94fe4d579"
+            ]
+        ]
+    },
+    {
+        "id": "59eb54c94fe4d579",
+        "type": "mqtt out",
+        "z": "98eab5396367cef7",
+        "name": "Confirmation to Telegram",
+        "topic": "",
+        "qos": "2",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "48c854e9895abc80",
+        "x": 1810,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "ab9730983e5e0eb3",
+        "type": "http request",
+        "z": "98eab5396367cef7",
+        "name": "",
+        "method": "GET",
+        "ret": "obj",
+        "paytoqs": "query",
+        "url": "http://host.docker.internal:8080/get_confirmed_appointments",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 510,
+        "y": 260,
+        "wires": [
+            [
+                "50c439b50da6be8c"
+            ]
+        ]
+    },
+    {
+        "id": "50c439b50da6be8c",
+        "type": "ui-table",
+        "z": "98eab5396367cef7",
+        "group": "a6b3668000f863cc",
+        "name": "Calendar",
+        "label": "",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "maxrows": 0,
+        "passthru": false,
+        "autocols": false,
+        "showSearch": true,
+        "deselect": true,
+        "selectionType": "none",
+        "columns": [
+            {
+                "title": "Date",
+                "key": "day",
+                "keyType": "key",
+                "type": "text",
+                "width": "",
+                "align": "start"
+            },
+            {
+                "title": "Time",
+                "key": "time",
+                "keyType": "key",
+                "type": "text",
+                "width": "",
+                "align": "start"
+            },
+            {
+                "title": "Patient",
+                "key": "name",
+                "keyType": "key",
+                "type": "text",
+                "width": "",
+                "align": "start"
+            },
+            {
+                "title": "Reason",
+                "key": "reason",
+                "keyType": "key",
+                "type": "text",
+                "width": "",
+                "align": "start"
+            }
+        ],
+        "mobileBreakpoint": "sm",
+        "mobileBreakpointType": "defaults",
+        "action": "replace",
+        "className": "",
+        "x": 700,
+        "y": 260,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "1b89bac55f951b7b",
+        "type": "ui-control",
+        "z": "98eab5396367cef7",
+        "name": "Go to nex page",
+        "ui": "56556cda8fa1a52e",
+        "events": "change",
+        "x": 1460,
+        "y": 200,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "67555d4123d052ef",
+        "type": "comment",
+        "z": "98eab5396367cef7",
+        "name": "",
+        "info": "Quando si imposta data e ora inserire \nanche il nome del paziente per cui lo \nsi sta facendo e la visualizzazione del \ncalendario",
+        "x": 1100,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "871cc9a528dab927",
+        "type": "change",
+        "z": "98eab5396367cef7",
+        "name": "next page",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "{\"page\": \"Doctor Page\"}",
+                "tot": "json"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1240,
+        "y": 200,
+        "wires": [
+            [
+                "1b89bac55f951b7b"
+            ]
+        ]
+    },
+    {
+        "id": "a1c3e5f7b9d20001",
+        "type": "ui-group",
+        "name": "Welcome",
+        "page": "f88ef76f95dd78ee",
+        "width": 12,
+        "height": 1,
+        "order": 1,
+        "showTitle": false,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "a1c3e5f7b9d20002",
+        "type": "ui-markdown",
+        "z": "98eab5396367cef7",
+        "group": "a1c3e5f7b9d20001",
+        "name": "Welcome Doctor",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "content": "## Welcome, Doctor {{msg.payload.doctor_name}}\n",
+        "className": "",
+        "x": 500,
+        "y": 40,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "b2d4f6a8c0e10001",
+        "type": "http request",
+        "z": "cb86edee6af0e6cc",
+        "name": "Login Catalog",
+        "method": "POST",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "http://host.docker.internal:8080/login_doctor",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 430,
+        "y": 400,
+        "wires": [
+            [
+                "9482d5f3845f293e"
+            ]
+        ]
+    },
+    {
+        "id": "b2d4f6a8c0e10002",
+        "type": "change",
+        "z": "cb86edee6af0e6cc",
+        "name": "Wrong login",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "Wrong username or password",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 830,
+        "y": 460,
+        "wires": [
+            [
+                "b2d4f6a8c0e10003"
+            ]
+        ]
+    },
+    {
+        "id": "b2d4f6a8c0e10003",
+        "type": "ui-notification",
+        "z": "cb86edee6af0e6cc",
+        "ui": "56556cda8fa1a52e",
+        "position": "top right",
+        "colorDefault": true,
+        "color": "#000000",
+        "displayTime": "3",
+        "showCountdown": true,
+        "outputs": 1,
+        "allowDismiss": true,
+        "dismissText": "Close",
+        "allowConfirm": false,
+        "confirmText": "Confirm",
+        "raw": false,
+        "className": "",
+        "name": "Login error",
+        "x": 1060,
+        "y": 460,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "c3e5a7b9d1f20001",
+        "type": "change",
+        "z": "98eab5396367cef7",
+        "name": "Doctor filter",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "{}",
+                "tot": "json"
+            },
+            {
+                "t": "set",
+                "p": "payload.doctor_name",
+                "pt": "msg",
+                "to": "doctorName",
+                "tot": "global"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 290,
+        "y": 220,
+        "wires": [
+            [
+                "36d71bef0c01de31",
+                "ab9730983e5e0eb3",
+                "f1df2884ecb2cf8e",
+                "a1c3e5f7b9d20002"
+            ]
+        ]
+    }
+]
