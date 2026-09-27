@@ -39,23 +39,23 @@ logging.basicConfig(
 log = logging.getLogger(__name__)
 
 # ─── Configuration ────────────────────────────────────────────────────────────
-HEALTH_CATALOG_URL   = "http://health_catalog:5000"
-THINGSPEAK_API_URL   = "https://api.thingspeak.com/update.json"
-REST_PORT            = 5004
-WRITE_INTERVAL_SEC   = 15       # ThingSpeak free-tier minimum interval
-QUEUE_POLL_INTERVAL  = 1        # How often the sender thread checks the queue (s)
+HEALTH_CATALOG_URL  = "http://health_catalog:5000"
+THINGSPEAK_API_URL  = "https://api.thingspeak.com/update.json"
+REST_PORT           = 5004
+WRITE_INTERVAL_SEC  = 15   # ThingSpeak free-tier minimum interval
+QUEUE_POLL_INTERVAL = 1    # How often the sender thread checks the queue (s)
 
 # Field mapping: metric name → ThingSpeak field number
 FIELD_MAP = {
-    "heart_rate":                 "field1",
-    "body_temperature":           "field2",
-    "blood_pressure_systolic":    "field3",
-    "blood_pressure_diastolic":   "field4",
-    "rolling_mean_hr":            "field5",
-    "z_score_hr":                 "field6",
+    "heart_rate":                "field1",
+    "body_temperature":          "field2",
+    "blood_pressure_systolic":   "field3",
+    "blood_pressure_diastolic":  "field4",
+    "rolling_mean_hr":           "field5",
+    "z_score_hr":                "field6",
 }
 
-# ─── Shared state ────────────────────────────────────────────────────────────
+# ─── Shared state ─────────────────────────────────────────────────────────────
 # Per-patient channel config: {patient_id: {"channel_id": str, "write_api_key": str}}
 _channel_cfg: dict[str, dict] = {}
 _channel_cfg_lock = threading.Lock()
@@ -100,6 +100,7 @@ def fetch_patient_thingspeak_cfg(patient_id: str) -> dict | None:
     """
     Fetch the ThingSpeak channel config for a patient from the Health Catalog.
     Expected response: {"channel_id": "...", "write_api_key": "..."}
+    Caches results in _channel_cfg to avoid redundant catalog calls.
     Returns None if the patient has no ThingSpeak channel configured.
     """
     with _channel_cfg_lock:
@@ -117,7 +118,8 @@ def fetch_patient_thingspeak_cfg(patient_id: str) -> dict | None:
         cfg = resp.json()
         with _channel_cfg_lock:
             _channel_cfg[patient_id] = cfg
-        log.info("ThingSpeak config loaded for patient %s: channel %s", patient_id, cfg.get("channel_id"))
+        log.info("ThingSpeak config loaded for patient %s: channel %s",
+                 patient_id, cfg.get("channel_id"))
         return cfg
     except Exception as exc:
         log.error("Failed to fetch ThingSpeak config for %s: %s", patient_id, exc)
@@ -130,32 +132,40 @@ def fetch_patient_thingspeak_cfg(patient_id: str) -> dict | None:
 
 def _build_thingspeak_payload(write_api_key: str, sensor_data: dict) -> dict:
     """
-    Map our internal sensor payload to ThingSpeak field names.
-    Also extracts rolling stats if the Data Processor has attached them.
+    Map internal sensor/stats payload to ThingSpeak field names.
+
+    Handles two payload shapes:
+      - Raw sensor reading:  {"heart_rate": 72.0, "body_temperature": 36.6, ...}
+      - Data Processor stats: {"stats": {"heart_rate": {"mean": 72.0, "z_score": 0.3}}}
     """
     body = {"api_key": write_api_key}
 
-    # Direct sensor metrics
     for metric, field in FIELD_MAP.items():
-        # Check both top-level and nested under "stats"
         value = sensor_data.get(metric)
+
+        # Fall back to nested stats dict published by the Data Processor
         if value is None and "stats" in sensor_data:
-            # Data Processor publishes nested: stats.heart_rate.mean, etc.
-            stats = sensor_data["stats"]
-            if metric == "rolling_mean_hr":
-                value = (stats.get("heart_rate") or {}).get("mean")
-            elif metric == "z_score_hr":
-                value = (stats.get("heart_rate") or {}).get("z_score")
+            hr_stats = sensor_data["stats"].get("heart_rate")
+            # isinstance guard: ensures 0.0 is not treated as falsy/missing
+            if isinstance(hr_stats, dict):
+                if metric == "rolling_mean_hr":
+                    value = hr_stats.get("mean")
+                elif metric == "z_score_hr":
+                    value = hr_stats.get("z_score")
 
         if value is not None:
-            body[field] = round(float(value), 4)
+            # Wrap in try/except: guards against non-numeric sensor values
+            try:
+                body[field] = round(float(value), 4)
+            except (ValueError, TypeError):
+                log.debug("Skipping non-numeric value for %s: %r", metric, value)
 
-    # Optional: include patient status as ThingSpeak "status" field
+    # Include anomaly summary in ThingSpeak's status field (max 255 chars)
     if sensor_data.get("anomalies"):
-        severities = [a.get("severity", "") for a in sensor_data["anomalies"]]
-        body["status"] = "ALERT:" + ",".join(
-            f"{a['metric']}(z={a['z_score']})" for a in sensor_data["anomalies"]
-        )[:255]  # ThingSpeak status field max 255 chars
+        body["status"] = ("ALERT:" + ",".join(
+            f"{a.get('metric')}(z={a.get('z_score')})"
+            for a in sensor_data["anomalies"]
+        ))[:255]
 
     return body
 
@@ -163,27 +173,32 @@ def _build_thingspeak_payload(write_api_key: str, sensor_data: dict) -> dict:
 def send_to_thingspeak(patient_id: str, sensor_data: dict) -> bool:
     """
     POST sensor data to the patient's ThingSpeak channel.
-    Returns True on success, False on failure.
+    Returns True on success, False on any failure.
     """
     cfg = fetch_patient_thingspeak_cfg(patient_id)
     if not cfg:
-        return False  # No channel configured for this patient
+        return False
 
     body = _build_thingspeak_payload(cfg["write_api_key"], sensor_data)
 
-    # Need at least one field besides api_key
+    # Nothing to send if no fields were populated
     if len(body) <= 1:
-        log.debug("No field data to send for patient %s, skipping.", patient_id)
+        log.debug("No field data for patient %s, skipping ThingSpeak write.", patient_id)
         return False
 
     try:
         resp = requests.post(THINGSPEAK_API_URL, data=body, timeout=10)
         resp.raise_for_status()
         result = resp.json()
-        entry_id = result.get("entry_id", 0)
+
+        # ThingSpeak returns entry_id=0 on rate-limit or duplicate timestamp
+        entry_id = result.get("entry_id", 0) if isinstance(result, dict) else int(result)
         if entry_id == 0:
-            log.warning("ThingSpeak rejected update for patient %s (returned entry_id=0). "
-                        "Possible duplicate timestamp or rate limit.", patient_id)
+            log.warning(
+                "ThingSpeak rejected write for patient %s (entry_id=0). "
+                "Possible duplicate timestamp or rate limit hit.",
+                patient_id,
+            )
             with _stats_lock:
                 _stats["errors"] += 1
             return False
@@ -216,11 +231,9 @@ def _sender_loop():
     ThingSpeak write interval per channel.
 
     Strategy: "latest-wins buffering"
-      - When a reading arrives faster than the interval, we overwrite the
-        queued entry with the newest value.
-      - When the interval expires, we flush the newest buffered value.
-      - This ensures ThingSpeak always receives the most current data
-        without ever exceeding the rate limit.
+      - Incoming readings during cooldown overwrite the pending entry, so
+        ThingSpeak always receives the most current value, never stale data.
+      - When the cooldown expires the sender thread flushes the buffered value.
     """
     log.info("ThingSpeak sender thread started (interval=%ds)", WRITE_INTERVAL_SEC)
     while True:
@@ -228,24 +241,25 @@ def _sender_loop():
         now = time.time()
 
         with _queue_lock:
-            candidates = list(_queue.items())
+            candidates = list(_queue.keys())
 
-        for patient_id, entry in candidates:
+        for patient_id in candidates:
             with _last_sent_lock:
                 last = _last_sent.get(patient_id, 0)
 
-            elapsed = now - last
-            if elapsed < WRITE_INTERVAL_SEC:
+            if (now - last) < WRITE_INTERVAL_SEC:
                 continue  # Still in cooldown
 
-            # Pop from queue
+            # Pop atomically so a concurrent _enqueue cannot race us
             with _queue_lock:
-                if patient_id not in _queue:
-                    continue
-                pending = _queue.pop(patient_id)
+                pending = _queue.pop(patient_id, None)
+
+            if not pending:
+                continue
 
             wait_ms = int((now - pending["queued_at"]) * 1000)
-            log.debug("Flushing queued reading for patient %s (waited %dms)", patient_id, wait_ms)
+            log.debug("Flushing queued reading for patient %s (waited %dms)",
+                      patient_id, wait_ms)
 
             success = send_to_thingspeak(patient_id, pending["payload"])
             if success:
@@ -253,10 +267,13 @@ def _sender_loop():
                     _last_sent[patient_id] = time.time()
 
 
-def _enqueue(patient_id: str, payload: dict):
+def _enqueue(patient_id: str, payload: dict) -> None:
     """
-    Add (or replace) the pending payload for a patient.
-    If the interval has already elapsed, send immediately.
+    Ingest a new sensor reading.
+
+    Fast path  — cooldown has elapsed: send immediately, no queue needed.
+    Slow path  — still in cooldown: store as pending (overwrite any previous
+                 pending value so only the latest reading is ever forwarded).
     """
     with _stats_lock:
         _stats["queued"] += 1
@@ -265,62 +282,68 @@ def _enqueue(patient_id: str, payload: dict):
     with _last_sent_lock:
         last = _last_sent.get(patient_id, 0)
 
-    elapsed = now - last
-
-    if elapsed >= WRITE_INTERVAL_SEC:
-        # Can send right away — no need to queue
+    if (now - last) >= WRITE_INTERVAL_SEC:
+        # Fast path: interval already elapsed — send without queuing
         success = send_to_thingspeak(patient_id, payload)
         if success:
             with _last_sent_lock:
                 _last_sent[patient_id] = time.time()
     else:
-        # Queue the latest value (overwrite any previously queued reading)
+        # Slow path: buffer the latest value; drop whatever was waiting
         with _queue_lock:
             if patient_id in _queue:
                 with _stats_lock:
                     _stats["dropped"] += 1  # Previous queued value superseded
             _queue[patient_id] = {"payload": payload, "queued_at": now}
-        remaining = WRITE_INTERVAL_SEC - elapsed
+        remaining = WRITE_INTERVAL_SEC - (now - last)
         log.debug("Patient %s queued (%.1fs until next send)", patient_id, remaining)
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# MQTT — subscribe to both sensor readings AND Data Processor stats
+# MQTT callbacks  (paho-mqtt 2.x API)
 # ══════════════════════════════════════════════════════════════════════════════
 
-def on_connect(client, userdata, flags, rc):
-    if rc == 0:
-        # Subscribe to raw sensor readings
+def on_connect(client, userdata, flags, rc, properties=None):
+    """
+    Called when the broker acknowledges our connection.
+    Signature follows paho-mqtt CallbackAPIVersion.VERSION2.
+    rc can be an integer (0 = success) or the string "Success".
+    """
+    if rc == 0 or rc == "Success":
         sensor_topic = mqtt_config.get("subscribe_topic_sensors", "iothealth/+/sensors")
+        stats_topic  = mqtt_config.get("subscribe_topic_stats",   "iothealth/+/stats")
         client.subscribe(sensor_topic, qos=1)
-        # Subscribe to Data Processor rolling stats (for field5/field6)
-        stats_topic = mqtt_config.get("subscribe_topic_stats", "iothealth/+/stats")
-        client.subscribe(stats_topic, qos=1)
+        client.subscribe(stats_topic,  qos=1)
         log.info("MQTT connected. Subscribed to %s and %s", sensor_topic, stats_topic)
     else:
-        log.error("MQTT connection failed, code=%d", rc)
+        log.error("MQTT connection failed, code=%s", rc)
 
 
 def on_message(client, userdata, msg):
     try:
-        payload = json.loads(msg.payload.decode())
+        payload    = json.loads(msg.payload.decode())
         patient_id = payload.get("patient_id") or _patient_from_topic(msg.topic)
         if not patient_id:
+            log.warning("Cannot determine patient_id from topic %s", msg.topic)
             return
         _enqueue(patient_id, payload)
     except json.JSONDecodeError as exc:
         log.error("Bad JSON on %s: %s", msg.topic, exc)
     except Exception as exc:
-        log.exception("Error handling MQTT message: %s", exc)
+        log.exception("Unexpected error handling MQTT message: %s", exc)
 
 
 def _patient_from_topic(topic: str) -> str | None:
+    """Extract patient ID from topic pattern iothealth/<patient_id>/..."""
     parts = topic.split("/")
     return parts[1] if len(parts) >= 2 else None
 
 
 def setup_mqtt(broker_host: str, broker_port: int) -> mqtt.Client:
-    client = mqtt.Client(client_id="thingspeak_forwarder")
+    client = mqtt.Client(
+        client_id="thingspeak_forwarder",
+        callback_api_version=mqtt.CallbackAPIVersion.VERSION2,
+    )
     client.on_connect = on_connect
     client.on_message = on_message
     client.connect(broker_host, broker_port, keepalive=60)
@@ -339,30 +362,29 @@ def health():
 
 @app.get("/status")
 def status():
-    """Operational metrics for monitoring dashboards."""
+    """Operational metrics — queue depth, counters, last-sent timestamps."""
     with _stats_lock:
         s = dict(_stats)
     with _queue_lock:
         pending = list(_queue.keys())
     with _last_sent_lock:
-        last_sent = {pid: datetime.fromtimestamp(ts, tz=timezone.utc).isoformat()
-                     for pid, ts in _last_sent.items()}
+        last_sent = {
+            pid: datetime.fromtimestamp(ts, tz=timezone.utc).isoformat()
+            for pid, ts in _last_sent.items()
+        }
     return jsonify({
-        "service":        "thingspeak_forwarder",
-        "write_interval": WRITE_INTERVAL_SEC,
-        "counters":       s,
-        "queue_depth":    len(pending),
+        "service":          "thingspeak_forwarder",
+        "write_interval":   WRITE_INTERVAL_SEC,
+        "counters":         s,
+        "queue_depth":      len(pending),
         "pending_patients": pending,
-        "last_sent":      last_sent,
+        "last_sent":        last_sent,
     })
 
 
 @app.post("/patients/<patient_id>/flush")
 def flush(patient_id: str):
-    """
-    Manually flush the queued reading for a patient (e.g. for testing).
-    Ignores the rate-limit cooldown.
-    """
+    """Force-flush a queued reading, ignoring the cooldown (useful for testing)."""
     with _queue_lock:
         entry = _queue.pop(patient_id, None)
     if not entry:
@@ -384,7 +406,7 @@ def clear_channel_cache(patient_id: str):
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# Entry Point
+# Entry point
 # ══════════════════════════════════════════════════════════════════════════════
 
 def main():
@@ -392,13 +414,12 @@ def main():
 
     log.info("ThingSpeak Forwarder starting …")
     cfg = fetch_catalog_config()
-    mqtt_config = cfg.get("mqtt", {})
-    broker_host = mqtt_config.get("broker_host", "message_broker")
-    broker_port = int(mqtt_config.get("broker_port", 1883))
+    mqtt_config  = cfg.get("mqtt", {})
+    broker_host  = mqtt_config.get("broker_host", "message_broker")
+    broker_port  = int(mqtt_config.get("broker_port", 1883))
 
     mqtt_client = setup_mqtt(broker_host, broker_port)
 
-    # Start rate-limited sender thread
     t = threading.Thread(target=_sender_loop, daemon=True)
     t.start()
 
