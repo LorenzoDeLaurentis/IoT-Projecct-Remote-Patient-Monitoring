@@ -1,7 +1,7 @@
 {
     "config": {
         "mqtt": {
-            "broker_host": "message_broker", 
+            "broker_host": "message_broker",
             "broker_port": 1883,
             "topics": {
                 "sensors": "iothealth/+/sensors",
@@ -10,18 +10,20 @@
             }
         }
     },
-
-
     "doctors": [
         {
             "doctorID": "doc001",
             "name": "Luca Bianco",
-            "username": "diana",
-            "password": "diana"
+            "username": "luca.bianco",
+            "password": "luca"
+        },
+        {
+            "doctorID": "doc002",
+            "name": "Matteo Rossi",
+            "username": "matteo.rossi",
+            "password": "matteo"
         }
     ],
-
-
     "patients": [
         {
             "chatID": 1289459725,
@@ -50,44 +52,32 @@
             },
             "reminders": [
                 {
-                    "medicine_name": "prova2",
+                    "medicine_name": "test2",
                     "time": "11:10"
                 },
                 {
-                    "medicine_name": "prova3",
+                    "medicine_name": "test3",
                     "time": "11:09"
                 }
             ],
             "appointments": [
                 {
-                    "date": "25-07-2026",
-                    "reason": "male",
-                    "time": "18:30",
+                    "date": "05-10-2026",
+                    "time": "10:00",
+                    "reason": "Blood pressure check",
                     "status": "confirmed"
-                },
+                }
+            ],
+            "notes": "Young patient with no known heart disease. Occasional palpitations related to stress and caffeine. Resting ECG normal. Blood pressure within normal range. Annual cardiology check-up recommended.",
+            "visits": [
                 {
-                    "date": "25-07-2026",
-                    "reason": "male",
-                    "time": "18:30",
-                    "status": "confirmed"
-                },
-                {
-                    "date": "03-08-2026",
-                    "reason": "mal di testa",
-                    "time": "11:16",
-                    "status": "URGENTE"
-                },
-                {
-                    "date": "26-07-2026",
-                    "reason": "headache",
-                    "time": "11:10",
-                    "status": "pending"
-                },
-                {
-                    "date": "26-07-2026",
-                    "reason": "headache",
-                    "time": "11:10",
-                    "status": "confirmed"
+                    "visitID": "v1",
+                    "date": "2026-09-12",
+                    "time": "10:30",
+                    "reason": "Palpitations after coffee and during exam periods",
+                    "diagnosis": "Benign sinus tachycardia related to stress and caffeine. Resting ECG normal.",
+                    "therapy": "No drug therapy. Reduce caffeine intake, regular sleep and light aerobic exercise.",
+                    "notes": "Patient reassured. Repeat ECG if palpitations become more frequent or last longer."
                 }
             ]
         },
@@ -95,7 +85,7 @@
             "chatID": 5673925451,
             "name": "matteo costamagna",
             "birthdate": "20062003",
-            "doctor": "diana cheban",
+            "doctor": "Matteo Rossi",
             "sensorID": "sensor02",
             "condition": "healthy",
             "thresholds": {
@@ -117,13 +107,22 @@
                 }
             },
             "reminders": [],
-            "appointments": []
+            "appointments": [
+                {
+                    "date": "TBD",
+                    "time": "TBD",
+                    "reason": "Chest tightness after exertion",
+                    "status": "pending"
+                }
+            ],
+            "notes": "Young athlete. Athletic bradycardia (heart rate around 52 bpm), considered physiological. Yearly sports cardiology assessment with stress test.",
+            "visits": []
         },
         {
             "chatID": 6596242418,
             "name": "Giovanni Giordano",
             "birthdate": "05/12/2000",
-            "doctor": "Diana White",
+            "doctor": "Matteo Rossi",
             "sensorID": "sensor03",
             "condition": "healthy",
             "thresholds": {
@@ -145,132 +144,32 @@
                 }
             },
             "reminders": [],
-            "appointments": []
-        },
-        {
-            "chatID": 9988776655,
-            "name": "Mario Rossi",
-            "birthdate": "12/05/1990",
-            "doctor": "Luca Bianco",
-            "sensorID": "sensor04",
-            "condition": "diabetes",
-            "thresholds": {
-                "heart_rate": {
-                    "min": 60,
-                    "max": 100
-                },
-                "body_temperature": {
-                    "min": 36.0,
-                    "max": 37.5
-                },
-                "blood_pressure_systolic": {
-                    "min": 90,
-                    "max": 165
-                },
-                "blood_pressure_diastolic": {
-                    "min": 60,
-                    "max": 110
-                }
-            },
-            "reminders": [],
             "appointments": [
                 {
-                    "date": "26-07-2026",
-                    "reason": "Routine checkup",
-                    "time": "11:10",
-                    "status": "confirmed"
+                    "date": "TBD",
+                    "time": "TBD",
+                    "reason": "Palpitations at night",
+                    "status": "pending"
+                }
+            ],
+            "notes": "Reports nocturnal palpitations, likely anxiety-related. Previous ECG normal. 24-hour Holter monitoring recommended to exclude arrhythmias.",
+            "visits": [
+                {
+                    "visitID": "v1",
+                    "date": "2026-09-08",
+                    "time": "16:00",
+                    "reason": "Night-time palpitations",
+                    "diagnosis": "Occasional premature ventricular contractions, likely anxiety-related. Echocardiogram normal.",
+                    "therapy": "No medication for now. Relaxation techniques and limit caffeine and alcohol.",
+                    "notes": "24-hour Holter monitoring booked to confirm the frequency of the extra beats."
                 }
             ]
         },
         {
-            "chatID": 9988776656,
-            "name": "Marco Rossi",
-            "birthdate": "1985-05-12",
-            "doctor": "Dr. Smith",
-            "sensorID": "sensor05",
-            "condition": "hypothyroidism",
-            "thresholds": {
-                "heart_rate": {
-                    "min": 40,
-                    "max": 100
-                },
-                "body_temperature": {
-                    "min": 35.5,
-                    "max": 37.5
-                },
-                "blood_pressure_systolic": {
-                    "min": 90,
-                    "max": 140
-                },
-                "blood_pressure_diastolic": {
-                    "min": 60,
-                    "max": 90
-                }
-            },
-            "reminders": [],
-            "appointments": []
-        },
-        {
-            "chatID": 123456789,
-            "name": "Mario Bianchi",
-            "birthdate": "1985-05-12",
-            "doctor": "Dr. Smith",
-            "sensorID": "sensor06",
-            "condition": "hypertension",
-            "thresholds": {
-                "heart_rate": {
-                    "min": 60,
-                    "max": 100
-                },
-                "body_temperature": {
-                    "min": 36.0,
-                    "max": 37.5
-                },
-                "blood_pressure_systolic": {
-                    "min": 90,
-                    "max": 165
-                },
-                "blood_pressure_diastolic": {
-                    "min": 60,
-                    "max": 110
-                }
-            },
-            "reminders": [],
-            "appointments": []
-        },
-        {
-            "chatID": 225987647,
-            "name": "Lucia Rossi",
-            "birthdate": "1990-06-3",
-            "doctor": "Dr. Smith",
-            "sensorID": "sensor07",
-            "condition": "hyperthyroidism",
-            "thresholds": {
-                "heart_rate": {
-                    "min": 60,
-                    "max": 125
-                },
-                "body_temperature": {
-                    "min": 36.0,
-                    "max": 37.8
-                },
-                "blood_pressure_systolic": {
-                    "min": 90,
-                    "max": 165
-                },
-                "blood_pressure_diastolic": {
-                    "min": 60,
-                    "max": 110
-                }
-            },
-            "reminders": [],
-            "appointments": []
-        },
-        {
             "chatID": 999999999,
             "name": "Pluto",
-            "birthdate": "ieri",
-            "doctor": "pippo",
+            "birthdate": "yesterday",
+            "doctor": "Luca Bianco",
             "sensorID": "sensor08",
             "condition": "healthy",
             "thresholds": {
@@ -292,13 +191,22 @@
                 }
             },
             "reminders": [],
-            "appointments": []
+            "appointments": [
+                {
+                    "date": "TBD",
+                    "time": "TBD",
+                    "reason": "Tachycardia when I climb stairs",
+                    "status": "pending"
+                }
+            ],
+            "notes": "Healthy patient, no cardiovascular risk factors. Normal heart rate and blood pressure. Routine cardiology screening only.",
+            "visits": []
         },
         {
             "chatID": 1111111111,
             "name": "Donald Duck",
             "birthdate": "1939, LA",
-            "doctor": "Dr. Mouse",
+            "doctor": "Luca Bianco",
             "sensorID": "N/A",
             "condition": "healthy",
             "thresholds": {
@@ -346,18 +254,20 @@
             ],
             "appointments": [
                 {
-                    "date": "26-07-2026",
-                    "reason": "Logopedia",
-                    "time": "11:20",
-                    "status": "to be confirmed"
+                    "date": "TBD",
+                    "time": "TBD",
+                    "reason": "Left arm pain for a few days",
+                    "status": "pending"
                 }
-            ]
+            ],
+            "notes": "Elderly patient. Mild isolated systolic hypertension. No history of heart disease. Monitor blood pressure every 3 months.",
+            "visits": []
         },
         {
             "chatID": 3366998855,
             "name": "Pippo",
             "birthdate": "1939",
-            "doctor": "Topolino",
+            "doctor": "Matteo Rossi",
             "sensorID": "sensor09",
             "condition": "renal_failure",
             "thresholds": {
@@ -380,19 +290,28 @@
             },
             "reminders": [
                 {
-                    "medicine_name": "sonnifero",
+                    "medicine_name": "sleeping pill",
                     "time": "15:35"
                 },
                 {
-                    "medicine_name": "vitamine",
+                    "medicine_name": "vitamins",
                     "time": "15:10"
                 },
                 {
-                    "medicine_name": "tachipirina",
+                    "medicine_name": "paracetamol",
                     "time": "11:17"
                 }
             ],
-            "appointments": []
+            "appointments": [
+                {
+                    "date": "07-10-2026",
+                    "time": "15:30",
+                    "reason": "ECG check",
+                    "status": "confirmed"
+                }
+            ],
+            "notes": "Chronic kidney disease, high cardiovascular risk. Monitor blood pressure and potassium levels. Periodic ECG to check for arrhythmias. Avoid nephrotoxic drugs.",
+            "visits": []
         }
     ]
 }

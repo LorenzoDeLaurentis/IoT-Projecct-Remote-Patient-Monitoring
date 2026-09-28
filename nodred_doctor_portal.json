@@ -1,23 +1,39 @@
 [
     {
-        "id": "03d0e8b99b1b86b1",
-        "type": "tab",
-        "label": "Flow 3",
-        "disabled": false,
-        "info": "",
-        "env": []
-    },
-    {
         "id": "cb86edee6af0e6cc",
         "type": "tab",
-        "label": "Pagina di Login",
+        "label": "1 Login",
         "disabled": false,
         "info": ""
     },
     {
         "id": "98eab5396367cef7",
         "type": "tab",
-        "label": "Pagina Dottore",
+        "label": "2 Doctor Page",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "a9c1e3f5b7d00001",
+        "type": "tab",
+        "label": "3 Create Appointment",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "a9c1e3f5b7d00002",
+        "type": "tab",
+        "label": "4 Patient Detail",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "a9c1e3f5b7d00003",
+        "type": "tab",
+        "label": "5 Visits",
         "disabled": false,
         "info": "",
         "env": []
@@ -297,7 +313,7 @@
         "name": "Idea di scalabilità:leggere",
         "info": "Idea di scalabilità:\n\nnel database.json aggiungere la sezione:\n{\"doctors\":\n            [{\"doctorID\": 01,\n              \"username\": diana\n              \"password\": diana\n              \"patientID\": [\"tutti i chatID\"] },\n              ...\n              ]}\n\nIn questo modo si potrebbe fare una http request\nper fare il sito scalabile",
         "x": 130,
-        "y": 80,
+        "y": 40,
         "wires": []
     },
     {
@@ -340,8 +356,8 @@
         "className": "",
         "passthru": false,
         "dropdownOptions": [],
-        "x": 250,
-        "y": 400,
+        "x": 130,
+        "y": 340,
         "wires": [
             [
                 "b2d4f6a8c0e10001"
@@ -374,8 +390,8 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 830,
-        "y": 400,
+        "x": 790,
+        "y": 340,
         "wires": [
             [
                 "8526958b428bd62f"
@@ -402,8 +418,8 @@
         "checkall": "false",
         "repair": false,
         "outputs": 2,
-        "x": 620,
-        "y": 400,
+        "x": 570,
+        "y": 340,
         "wires": [
             [
                 "af92e714e7c7fcad"
@@ -417,11 +433,11 @@
         "id": "8526958b428bd62f",
         "type": "ui-control",
         "z": "cb86edee6af0e6cc",
-        "name": "",
+        "name": "Change page",
         "ui": "56556cda8fa1a52e",
         "events": "change",
-        "x": 1060,
-        "y": 400,
+        "x": 1010,
+        "y": 340,
         "wires": [
             []
         ]
@@ -437,8 +453,8 @@
         "height": "",
         "content": "![Portal Logo](/logo2_login.jpg)\n",
         "className": "",
-        "x": 200,
-        "y": 260,
+        "x": 130,
+        "y": 190,
         "wires": [
             []
         ]
@@ -447,7 +463,7 @@
         "id": "36d71bef0c01de31",
         "type": "http request",
         "z": "98eab5396367cef7",
-        "name": "",
+        "name": "Pending requests",
         "method": "GET",
         "ret": "obj",
         "paytoqs": "query",
@@ -459,8 +475,8 @@
         "authType": "",
         "senderr": false,
         "headers": [],
-        "x": 310,
-        "y": 140,
+        "x": 570,
+        "y": 90,
         "wires": [
             [
                 "189788b994d07f9d"
@@ -505,19 +521,19 @@
         "mobileBreakpointType": "defaults",
         "action": "replace",
         "className": "",
-        "x": 500,
-        "y": 140,
+        "x": 790,
+        "y": 90,
         "wires": [
             [
-                "3e77c67f993067f4"
+                "b0d2f4a6c8e10005"
             ]
         ]
     },
     {
         "id": "3e77c67f993067f4",
         "type": "change",
-        "z": "98eab5396367cef7",
-        "name": "Salvare chatID",
+        "z": "a9c1e3f5b7d00001",
+        "name": "Save chatID",
         "rules": [
             {
                 "t": "set",
@@ -539,18 +555,18 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 720,
-        "y": 140,
+        "x": 350,
+        "y": 90,
         "wires": [
             [
-                "a3b3d05cda5322eb"
+                "1b89bac55f951b7b"
             ]
         ]
     },
     {
         "id": "67d76b74d4e2419d",
         "type": "ui-form",
-        "z": "98eab5396367cef7",
+        "z": "a9c1e3f5b7d00001",
         "name": "Impost date and Time",
         "group": "d043e104f5c87326",
         "label": "Select date and time of the appointment",
@@ -587,8 +603,8 @@
         "className": "",
         "passthru": false,
         "dropdownOptions": [],
-        "x": 1120,
-        "y": 120,
+        "x": 130,
+        "y": 240,
         "wires": [
             [
                 "b058e30cad4ffb6b",
@@ -600,7 +616,7 @@
         "id": "f1df2884ecb2cf8e",
         "type": "http request",
         "z": "98eab5396367cef7",
-        "name": "",
+        "name": "My patients",
         "method": "GET",
         "ret": "obj",
         "paytoqs": "query",
@@ -612,8 +628,8 @@
         "authType": "",
         "senderr": false,
         "headers": [],
-        "x": 310,
-        "y": 360,
+        "x": 570,
+        "y": 190,
         "wires": [
             [
                 "5e9843515309be44"
@@ -666,11 +682,11 @@
         "mobileBreakpointType": "defaults",
         "action": "replace",
         "className": "",
-        "x": 510,
-        "y": 360,
+        "x": 790,
+        "y": 190,
         "wires": [
             [
-                "d4f6b8c0e2a30010"
+                "b0d2f4a6c8e10009"
             ]
         ]
     },
@@ -695,8 +711,8 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 110,
-        "y": 220,
+        "x": 130,
+        "y": 90,
         "wires": [
             [
                 "c3e5a7b9d1f20001"
@@ -704,22 +720,9 @@
         ]
     },
     {
-        "id": "a3b3d05cda5322eb",
-        "type": "ui-control",
-        "z": "98eab5396367cef7",
-        "name": "Go to nex page",
-        "ui": "56556cda8fa1a52e",
-        "events": "change",
-        "x": 900,
-        "y": 100,
-        "wires": [
-            []
-        ]
-    },
-    {
         "id": "b058e30cad4ffb6b",
         "type": "function",
-        "z": "98eab5396367cef7",
+        "z": "a9c1e3f5b7d00001",
         "name": "sending the payload",
         "func": "let chatID = flow.get(\"selectedChatID\");\nmsg.payload.chatID = chatID;\nmsg.payload.status = \"confirmed\";\n\nmsg.topic = `clinician/patient/${chatID}/appointments/confirmation`;\n\nreturn msg;",
         "outputs": 1,
@@ -728,8 +731,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1380,
-        "y": 120,
+        "x": 350,
+        "y": 240,
         "wires": [
             [
                 "59eb54c94fe4d579"
@@ -739,7 +742,7 @@
     {
         "id": "59eb54c94fe4d579",
         "type": "mqtt out",
-        "z": "98eab5396367cef7",
+        "z": "a9c1e3f5b7d00001",
         "name": "Confirmation to Telegram",
         "topic": "",
         "qos": "2",
@@ -750,15 +753,15 @@
         "correl": "",
         "expiry": "",
         "broker": "48c854e9895abc80",
-        "x": 1810,
-        "y": 120,
+        "x": 570,
+        "y": 240,
         "wires": []
     },
     {
         "id": "ab9730983e5e0eb3",
         "type": "http request",
         "z": "98eab5396367cef7",
-        "name": "",
+        "name": "Confirmed appointments",
         "method": "GET",
         "ret": "obj",
         "paytoqs": "query",
@@ -770,8 +773,8 @@
         "authType": "",
         "senderr": false,
         "headers": [],
-        "x": 510,
-        "y": 260,
+        "x": 570,
+        "y": 140,
         "wires": [
             [
                 "50c439b50da6be8c"
@@ -832,8 +835,8 @@
         "mobileBreakpointType": "defaults",
         "action": "replace",
         "className": "",
-        "x": 700,
-        "y": 260,
+        "x": 790,
+        "y": 140,
         "wires": [
             []
         ]
@@ -841,12 +844,12 @@
     {
         "id": "1b89bac55f951b7b",
         "type": "ui-control",
-        "z": "98eab5396367cef7",
-        "name": "Go to nex page",
+        "z": "a9c1e3f5b7d00001",
+        "name": "Change page",
         "ui": "56556cda8fa1a52e",
         "events": "change",
-        "x": 1460,
-        "y": 200,
+        "x": 570,
+        "y": 90,
         "wires": [
             []
         ]
@@ -854,17 +857,17 @@
     {
         "id": "67555d4123d052ef",
         "type": "comment",
-        "z": "98eab5396367cef7",
+        "z": "a9c1e3f5b7d00001",
         "name": "",
         "info": "Quando si imposta data e ora inserire \nanche il nome del paziente per cui lo \nsi sta facendo e la visualizzazione del \ncalendario",
-        "x": 1100,
-        "y": 80,
+        "x": 790,
+        "y": 40,
         "wires": []
     },
     {
         "id": "871cc9a528dab927",
         "type": "change",
-        "z": "98eab5396367cef7",
+        "z": "a9c1e3f5b7d00001",
         "name": "next page",
         "rules": [
             {
@@ -880,8 +883,8 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 1240,
-        "y": 200,
+        "x": 350,
+        "y": 290,
         "wires": [
             [
                 "1b89bac55f951b7b"
@@ -913,7 +916,7 @@
         "height": 0,
         "content": "## Welcome, Doctor {{msg.payload.doctor_name}}\n",
         "className": "",
-        "x": 500,
+        "x": 570,
         "y": 40,
         "wires": [
             []
@@ -935,8 +938,8 @@
         "authType": "",
         "senderr": false,
         "headers": [],
-        "x": 430,
-        "y": 400,
+        "x": 350,
+        "y": 340,
         "wires": [
             [
                 "9482d5f3845f293e"
@@ -962,8 +965,8 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 830,
-        "y": 460,
+        "x": 790,
+        "y": 390,
         "wires": [
             [
                 "b2d4f6a8c0e10003"
@@ -988,8 +991,8 @@
         "raw": false,
         "className": "",
         "name": "Login error",
-        "x": 1060,
-        "y": 460,
+        "x": 1010,
+        "y": 390,
         "wires": [
             []
         ]
@@ -1020,8 +1023,8 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 290,
-        "y": 220,
+        "x": 350,
+        "y": 90,
         "wires": [
             [
                 "36d71bef0c01de31",
@@ -1112,13 +1115,13 @@
     {
         "id": "d4f6b8c0e2a30010",
         "type": "change",
-        "z": "98eab5396367cef7",
+        "z": "a9c1e3f5b7d00002",
         "name": "Open patient",
         "rules": [
             {
                 "t": "set",
                 "p": "selectedPatient",
-                "pt": "flow",
+                "pt": "global",
                 "to": "payload.chatID",
                 "tot": "msg"
             },
@@ -1134,7 +1137,7 @@
                 "p": "payload.chatID",
                 "pt": "msg",
                 "to": "selectedPatient",
-                "tot": "flow"
+                "tot": "global"
             }
         ],
         "action": "",
@@ -1142,19 +1145,20 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 290,
-        "y": 480,
+        "x": 350,
+        "y": 90,
         "wires": [
             [
                 "d4f6b8c0e2a30011",
-                "d4f6b8c0e2a30013"
+                "d4f6b8c0e2a30013",
+                "b0d2f4a6c8e10012"
             ]
         ]
     },
     {
         "id": "d4f6b8c0e2a30011",
         "type": "http request",
-        "z": "98eab5396367cef7",
+        "z": "a9c1e3f5b7d00002",
         "name": "Get patient",
         "method": "GET",
         "ret": "obj",
@@ -1167,19 +1171,20 @@
         "authType": "",
         "senderr": false,
         "headers": [],
-        "x": 490,
-        "y": 480,
+        "x": 570,
+        "y": 90,
         "wires": [
             [
                 "d4f6b8c0e2a30012",
-                "d4f6b8c0e2a30020"
+                "d4f6b8c0e2a30020",
+                "e5a7c9d1f3b40010"
             ]
         ]
     },
     {
         "id": "d4f6b8c0e2a30012",
         "type": "ui-markdown",
-        "z": "98eab5396367cef7",
+        "z": "a9c1e3f5b7d00002",
         "group": "d4f6b8c0e2a30003",
         "name": "Patient Info",
         "order": 1,
@@ -1187,8 +1192,8 @@
         "height": 0,
         "content": "### {{msg.payload.name}}\n\n**Birthdate:** {{msg.payload.birthdate}}  \n**Sensor ID:** {{msg.payload.sensorID}}  \n**Condition:** {{msg.payload.condition}}  \n**Doctor:** {{msg.payload.doctor}}\n",
         "className": "",
-        "x": 700,
-        "y": 480,
+        "x": 790,
+        "y": 90,
         "wires": [
             []
         ]
@@ -1196,7 +1201,7 @@
     {
         "id": "d4f6b8c0e2a30013",
         "type": "change",
-        "z": "98eab5396367cef7",
+        "z": "a9c1e3f5b7d00002",
         "name": "Go to patient page",
         "rules": [
             {
@@ -1212,18 +1217,18 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 510,
-        "y": 540,
+        "x": 570,
+        "y": 290,
         "wires": [
             [
-                "a3b3d05cda5322eb"
+                "b0d2f4a6c8e1000b"
             ]
         ]
     },
     {
         "id": "d4f6b8c0e2a30014",
         "type": "ui-button",
-        "z": "98eab5396367cef7",
+        "z": "a9c1e3f5b7d00002",
         "group": "d4f6b8c0e2a30002",
         "name": "Back to patients",
         "label": "← Back to patients",
@@ -1251,8 +1256,8 @@
         "enablePointerup": false,
         "pointerupPayload": "",
         "pointerupPayloadType": "str",
-        "x": 290,
-        "y": 600,
+        "x": 130,
+        "y": 440,
         "wires": [
             [
                 "d4f6b8c0e2a30015"
@@ -1262,7 +1267,7 @@
     {
         "id": "d4f6b8c0e2a30015",
         "type": "change",
-        "z": "98eab5396367cef7",
+        "z": "a9c1e3f5b7d00002",
         "name": "Back",
         "rules": [
             {
@@ -1278,18 +1283,18 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 510,
-        "y": 600,
+        "x": 350,
+        "y": 440,
         "wires": [
             [
-                "a3b3d05cda5322eb"
+                "b0d2f4a6c8e1000e"
             ]
         ]
     },
     {
         "id": "d4f6b8c0e2a30020",
         "type": "switch",
-        "z": "98eab5396367cef7",
+        "z": "a9c1e3f5b7d00002",
         "name": "Has notes?",
         "property": "payload.notes",
         "propertyType": "msg",
@@ -1304,8 +1309,8 @@
         "checkall": "false",
         "repair": false,
         "outputs": 2,
-        "x": 690,
-        "y": 660,
+        "x": 790,
+        "y": 190,
         "wires": [
             [
                 "d4f6b8c0e2a30021"
@@ -1318,7 +1323,7 @@
     {
         "id": "d4f6b8c0e2a30021",
         "type": "change",
-        "z": "98eab5396367cef7",
+        "z": "a9c1e3f5b7d00002",
         "name": "Notes",
         "rules": [
             {
@@ -1327,6 +1332,15 @@
                 "pt": "msg",
                 "to": "payload.notes",
                 "tot": "msg"
+            },
+            {
+                "t": "change",
+                "p": "payload",
+                "pt": "msg",
+                "from": "^",
+                "fromt": "re",
+                "to": "\n",
+                "tot": "str"
             }
         ],
         "action": "",
@@ -1334,8 +1348,8 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 880,
-        "y": 640,
+        "x": 1010,
+        "y": 190,
         "wires": [
             [
                 "d4f6b8c0e2a30023",
@@ -1346,14 +1360,14 @@
     {
         "id": "d4f6b8c0e2a30022",
         "type": "change",
-        "z": "98eab5396367cef7",
+        "z": "a9c1e3f5b7d00002",
         "name": "No notes",
         "rules": [
             {
                 "t": "set",
                 "p": "payload",
                 "pt": "msg",
-                "to": "",
+                "to": "\n",
                 "tot": "str"
             }
         ],
@@ -1362,8 +1376,8 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 880,
-        "y": 680,
+        "x": 1010,
+        "y": 240,
         "wires": [
             [
                 "d4f6b8c0e2a30023",
@@ -1374,13 +1388,13 @@
     {
         "id": "d4f6b8c0e2a30023",
         "type": "ui-text-input",
-        "z": "98eab5396367cef7",
+        "z": "a9c1e3f5b7d00002",
         "group": "d4f6b8c0e2a30004",
         "name": "Notes",
-        "label": "Notes",
+        "label": "",
         "order": 1,
         "width": 0,
-        "height": 0,
+        "height": 4,
         "topic": "topic",
         "topicType": "msg",
         "mode": "textarea",
@@ -1396,8 +1410,8 @@
         "icon": "",
         "iconPosition": "left",
         "iconInnerPosition": "inside",
-        "x": 1080,
-        "y": 640,
+        "x": 1230,
+        "y": 190,
         "wires": [
             [
                 "d4f6b8c0e2a30024"
@@ -1407,7 +1421,7 @@
     {
         "id": "d4f6b8c0e2a30024",
         "type": "change",
-        "z": "98eab5396367cef7",
+        "z": "a9c1e3f5b7d00002",
         "name": "Store draft",
         "rules": [
             {
@@ -1423,8 +1437,8 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 1280,
-        "y": 660,
+        "x": 1450,
+        "y": 240,
         "wires": [
             []
         ]
@@ -1432,7 +1446,7 @@
     {
         "id": "d4f6b8c0e2a30025",
         "type": "ui-button",
-        "z": "98eab5396367cef7",
+        "z": "a9c1e3f5b7d00002",
         "group": "d4f6b8c0e2a30004",
         "name": "Save notes",
         "label": "Save notes",
@@ -1460,8 +1474,8 @@
         "enablePointerup": false,
         "pointerupPayload": "",
         "pointerupPayloadType": "str",
-        "x": 290,
-        "y": 740,
+        "x": 130,
+        "y": 590,
         "wires": [
             [
                 "d4f6b8c0e2a30026"
@@ -1471,7 +1485,7 @@
     {
         "id": "d4f6b8c0e2a30026",
         "type": "change",
-        "z": "98eab5396367cef7",
+        "z": "a9c1e3f5b7d00002",
         "name": "Notes body",
         "rules": [
             {
@@ -1486,7 +1500,7 @@
                 "p": "payload.chatID",
                 "pt": "msg",
                 "to": "selectedPatient",
-                "tot": "flow"
+                "tot": "global"
             },
             {
                 "t": "set",
@@ -1494,6 +1508,15 @@
                 "pt": "msg",
                 "to": "draftNotes",
                 "tot": "flow"
+            },
+            {
+                "t": "change",
+                "p": "payload.notes",
+                "pt": "msg",
+                "from": "^\\s+",
+                "fromt": "re",
+                "to": "",
+                "tot": "str"
             }
         ],
         "action": "",
@@ -1501,8 +1524,8 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 480,
-        "y": 740,
+        "x": 350,
+        "y": 590,
         "wires": [
             [
                 "d4f6b8c0e2a30027"
@@ -1512,7 +1535,7 @@
     {
         "id": "d4f6b8c0e2a30027",
         "type": "http request",
-        "z": "98eab5396367cef7",
+        "z": "a9c1e3f5b7d00002",
         "name": "Save notes",
         "method": "PUT",
         "ret": "txt",
@@ -1525,8 +1548,8 @@
         "authType": "",
         "senderr": false,
         "headers": [],
-        "x": 680,
-        "y": 740,
+        "x": 570,
+        "y": 590,
         "wires": [
             [
                 "d4f6b8c0e2a30028"
@@ -1536,7 +1559,7 @@
     {
         "id": "d4f6b8c0e2a30028",
         "type": "switch",
-        "z": "98eab5396367cef7",
+        "z": "a9c1e3f5b7d00002",
         "name": "Saved?",
         "property": "statusCode",
         "propertyType": "msg",
@@ -1553,8 +1576,8 @@
         "checkall": "false",
         "repair": false,
         "outputs": 2,
-        "x": 860,
-        "y": 740,
+        "x": 790,
+        "y": 590,
         "wires": [
             [
                 "d4f6b8c0e2a30029"
@@ -1567,7 +1590,7 @@
     {
         "id": "d4f6b8c0e2a30029",
         "type": "change",
-        "z": "98eab5396367cef7",
+        "z": "a9c1e3f5b7d00002",
         "name": "Notes saved",
         "rules": [
             {
@@ -1583,8 +1606,8 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 1050,
-        "y": 720,
+        "x": 1010,
+        "y": 590,
         "wires": [
             [
                 "d4f6b8c0e2a3002b"
@@ -1594,7 +1617,7 @@
     {
         "id": "d4f6b8c0e2a3002a",
         "type": "change",
-        "z": "98eab5396367cef7",
+        "z": "a9c1e3f5b7d00002",
         "name": "Error saving",
         "rules": [
             {
@@ -1610,8 +1633,8 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 1050,
-        "y": 760,
+        "x": 1010,
+        "y": 640,
         "wires": [
             [
                 "d4f6b8c0e2a3002b"
@@ -1621,7 +1644,7 @@
     {
         "id": "d4f6b8c0e2a3002b",
         "type": "ui-notification",
-        "z": "98eab5396367cef7",
+        "z": "a9c1e3f5b7d00002",
         "ui": "56556cda8fa1a52e",
         "position": "top right",
         "colorDefault": true,
@@ -1636,8 +1659,2025 @@
         "raw": false,
         "className": "",
         "name": "Notes notification",
-        "x": 1260,
+        "x": 1230,
+        "y": 590,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "e5a7c9d1f3b40001",
+        "type": "ui-group",
+        "name": "Appointments",
+        "page": "d4f6b8c0e2a30001",
+        "width": 6,
+        "height": 1,
+        "order": 4,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "e5a7c9d1f3b40002",
+        "type": "ui-group",
+        "name": "Visits",
+        "page": "d4f6b8c0e2a30001",
+        "width": 6,
+        "height": 1,
+        "order": 5,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "e5a7c9d1f3b40003",
+        "type": "ui-group",
+        "name": "Vital Trends (ThingSpeak)",
+        "page": "d4f6b8c0e2a30001",
+        "width": 12,
+        "height": 1,
+        "order": 6,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "e5a7c9d1f3b40004",
+        "type": "ui-page",
+        "name": "Visit Report",
+        "ui": "56556cda8fa1a52e",
+        "path": "/visit",
+        "icon": "clipboard",
+        "layout": "grid",
+        "theme": "e50a68f84d1fd009",
+        "breakpoints": [
+            {
+                "name": "Default",
+                "px": "0",
+                "cols": "3"
+            },
+            {
+                "name": "Tablet",
+                "px": "576",
+                "cols": "6"
+            },
+            {
+                "name": "Small Desktop",
+                "px": "768",
+                "cols": "9"
+            },
+            {
+                "name": "Desktop",
+                "px": "1024",
+                "cols": "12"
+            }
+        ],
+        "order": 5,
+        "className": "",
+        "visible": "false",
+        "disabled": "false"
+    },
+    {
+        "id": "e5a7c9d1f3b40005",
+        "type": "ui-group",
+        "name": "Visit Navigation",
+        "page": "e5a7c9d1f3b40004",
+        "width": 12,
+        "height": 1,
+        "order": 1,
+        "showTitle": false,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "e5a7c9d1f3b40006",
+        "type": "ui-group",
+        "name": "Visit Report",
+        "page": "e5a7c9d1f3b40004",
+        "width": 12,
+        "height": 1,
+        "order": 2,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "e5a7c9d1f3b40010",
+        "type": "change",
+        "z": "a9c1e3f5b7d00002",
+        "name": "Appointments list",
+        "rules": [
+            {
+                "t": "set",
+                "p": "patientName",
+                "pt": "global",
+                "to": "payload.name",
+                "tot": "msg"
+            },
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "payload.appointments",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 790,
+        "y": 140,
+        "wires": [
+            [
+                "e5a7c9d1f3b40011"
+            ]
+        ]
+    },
+    {
+        "id": "e5a7c9d1f3b40011",
+        "type": "ui-table",
+        "z": "a9c1e3f5b7d00002",
+        "group": "e5a7c9d1f3b40001",
+        "name": "Patient appointments",
+        "label": "",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "maxrows": 0,
+        "passthru": false,
+        "autocols": false,
+        "showSearch": false,
+        "deselect": true,
+        "selectionType": "none",
+        "columns": [
+            {
+                "title": "Date",
+                "key": "date",
+                "keyType": "key",
+                "type": "text",
+                "width": "",
+                "align": "start"
+            },
+            {
+                "title": "Time",
+                "key": "time",
+                "keyType": "key",
+                "type": "text",
+                "width": "",
+                "align": "start"
+            },
+            {
+                "title": "Reason",
+                "key": "reason",
+                "keyType": "key",
+                "type": "text",
+                "width": "",
+                "align": "start"
+            },
+            {
+                "title": "Status",
+                "key": "status",
+                "keyType": "key",
+                "type": "text",
+                "width": "",
+                "align": "start"
+            }
+        ],
+        "mobileBreakpoint": "sm",
+        "mobileBreakpointType": "defaults",
+        "action": "replace",
+        "className": "",
+        "x": 1010,
+        "y": 140,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "e5a7c9d1f3b40015",
+        "type": "ui-table",
+        "z": "a9c1e3f5b7d00003",
+        "group": "e5a7c9d1f3b40002",
+        "name": "Visits",
+        "label": "",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "maxrows": 0,
+        "passthru": false,
+        "autocols": false,
+        "showSearch": false,
+        "deselect": true,
+        "selectionType": "click",
+        "columns": [
+            {
+                "title": "Date",
+                "key": "date",
+                "keyType": "key",
+                "type": "text",
+                "width": "",
+                "align": "start"
+            },
+            {
+                "title": "Reason",
+                "key": "reason",
+                "keyType": "key",
+                "type": "text",
+                "width": "",
+                "align": "start"
+            }
+        ],
+        "mobileBreakpoint": "sm",
+        "mobileBreakpointType": "defaults",
+        "action": "replace",
+        "className": "",
+        "x": 570,
+        "y": 90,
+        "wires": [
+            [
+                "e5a7c9d1f3b40016",
+                "e5a7c9d1f3b40018"
+            ]
+        ]
+    },
+    {
+        "id": "e5a7c9d1f3b40016",
+        "type": "change",
+        "z": "a9c1e3f5b7d00003",
+        "name": "Open visit",
+        "rules": [
+            {
+                "t": "set",
+                "p": "currentVisit",
+                "pt": "flow",
+                "to": "payload",
+                "tot": "msg"
+            },
+            {
+                "t": "set",
+                "p": "payload.patient",
+                "pt": "msg",
+                "to": "patientName",
+                "tot": "global"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 790,
+        "y": 90,
+        "wires": [
+            [
+                "e5a7c9d1f3b40017"
+            ]
+        ]
+    },
+    {
+        "id": "e5a7c9d1f3b40017",
+        "type": "ui-markdown",
+        "z": "a9c1e3f5b7d00003",
+        "group": "e5a7c9d1f3b40006",
+        "name": "Visit Report",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "content": "### {{msg.payload.patient}}\n\n**Visit:** {{msg.payload.date}} at {{msg.payload.time}}  \n**Reason:** {{msg.payload.reason}}\n\n#### Diagnosis\n{{msg.payload.diagnosis}}\n\n#### Therapy\n{{msg.payload.therapy}}\n\n#### Notes\n{{msg.payload.notes}}\n",
+        "className": "",
+        "x": 1010,
+        "y": 90,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "e5a7c9d1f3b40018",
+        "type": "change",
+        "z": "a9c1e3f5b7d00003",
+        "name": "Go to visit page",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "{\"page\":\"Visit Report\"}",
+                "tot": "json"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 790,
+        "y": 140,
+        "wires": [
+            [
+                "b0d2f4a6c8e10014"
+            ]
+        ]
+    },
+    {
+        "id": "e5a7c9d1f3b40019",
+        "type": "ui-button",
+        "z": "a9c1e3f5b7d00003",
+        "group": "e5a7c9d1f3b40005",
+        "name": "Back to patient",
+        "label": "← Back to patient",
+        "order": 1,
+        "width": 3,
+        "height": 1,
+        "emulateClick": false,
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "className": "",
+        "icon": "",
+        "iconPosition": "left",
+        "payload": "",
+        "payloadType": "str",
+        "topic": "topic",
+        "topicType": "msg",
+        "buttonColor": "",
+        "textColor": "",
+        "iconColor": "",
+        "enableClick": true,
+        "enablePointerdown": false,
+        "pointerdownPayload": "",
+        "pointerdownPayloadType": "str",
+        "enablePointerup": false,
+        "pointerupPayload": "",
+        "pointerupPayloadType": "str",
+        "x": 130,
+        "y": 290,
+        "wires": [
+            [
+                "e5a7c9d1f3b4001a"
+            ]
+        ]
+    },
+    {
+        "id": "e5a7c9d1f3b4001a",
+        "type": "change",
+        "z": "a9c1e3f5b7d00003",
+        "name": "Back to patient page",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "{\"page\":\"Patient Detail\"}",
+                "tot": "json"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 350,
+        "y": 290,
+        "wires": [
+            [
+                "b0d2f4a6c8e10016"
+            ]
+        ]
+    },
+    {
+        "id": "e5a7c9d1f3b4001b",
+        "type": "ui-markdown",
+        "z": "a9c1e3f5b7d00002",
+        "group": "e5a7c9d1f3b40003",
+        "name": "ThingSpeak placeholder",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "content": "*ThingSpeak chart coming soon.*\n",
+        "className": "",
+        "x": 130,
+        "y": 790,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "f6b8d0e2a4c50001",
+        "type": "ui-page",
+        "name": "Visit Editor",
+        "ui": "56556cda8fa1a52e",
+        "path": "/visit_editor",
+        "icon": "pencil",
+        "layout": "grid",
+        "theme": "e50a68f84d1fd009",
+        "breakpoints": [
+            {
+                "name": "Default",
+                "px": "0",
+                "cols": "3"
+            },
+            {
+                "name": "Tablet",
+                "px": "576",
+                "cols": "6"
+            },
+            {
+                "name": "Small Desktop",
+                "px": "768",
+                "cols": "9"
+            },
+            {
+                "name": "Desktop",
+                "px": "1024",
+                "cols": "12"
+            }
+        ],
+        "order": 6,
+        "className": "",
+        "visible": "false",
+        "disabled": "false"
+    },
+    {
+        "id": "f6b8d0e2a4c50002",
+        "type": "ui-group",
+        "name": "Editor Navigation",
+        "page": "f6b8d0e2a4c50001",
+        "width": 12,
+        "height": 1,
+        "order": 1,
+        "showTitle": false,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "f6b8d0e2a4c50003",
+        "type": "ui-group",
+        "name": "Visit Editor",
+        "page": "f6b8d0e2a4c50001",
+        "width": 12,
+        "height": 1,
+        "order": 2,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "f6b8d0e2a4c50004",
+        "type": "http request",
+        "z": "a9c1e3f5b7d00003",
+        "name": "Get visits",
+        "method": "GET",
+        "ret": "obj",
+        "paytoqs": "query",
+        "url": "http://host.docker.internal:8080/get_visits",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 350,
+        "y": 90,
+        "wires": [
+            [
+                "e5a7c9d1f3b40015"
+            ]
+        ]
+    },
+    {
+        "id": "f6b8d0e2a4c50006",
+        "type": "ui-text-input",
+        "z": "a9c1e3f5b7d00003",
+        "group": "f6b8d0e2a4c50003",
+        "name": "Visit date",
+        "label": "Date",
+        "order": 1,
+        "width": 6,
+        "height": 0,
+        "topic": "topic",
+        "topicType": "msg",
+        "mode": "date",
+        "tooltip": "",
+        "delay": 300,
+        "passthru": false,
+        "sendOnDelay": true,
+        "sendOnBlur": true,
+        "sendOnEnter": false,
+        "className": "",
+        "clearable": false,
+        "sendOnClear": false,
+        "icon": "",
+        "iconPosition": "left",
+        "iconInnerPosition": "inside",
+        "x": 790,
+        "y": 440,
+        "wires": [
+            [
+                "f6b8d0e2a4c50005"
+            ]
+        ]
+    },
+    {
+        "id": "f6b8d0e2a4c50005",
+        "type": "change",
+        "z": "a9c1e3f5b7d00003",
+        "name": "Draft date",
+        "rules": [
+            {
+                "t": "set",
+                "p": "visitDraft.date",
+                "pt": "flow",
+                "to": "payload",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1010,
+        "y": 440,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "f6b8d0e2a4c50008",
+        "type": "ui-text-input",
+        "z": "a9c1e3f5b7d00003",
+        "group": "f6b8d0e2a4c50003",
+        "name": "Visit time",
+        "label": "Time",
+        "order": 2,
+        "width": 6,
+        "height": 0,
+        "topic": "topic",
+        "topicType": "msg",
+        "mode": "time",
+        "tooltip": "",
+        "delay": 300,
+        "passthru": false,
+        "sendOnDelay": true,
+        "sendOnBlur": true,
+        "sendOnEnter": false,
+        "className": "",
+        "clearable": false,
+        "sendOnClear": false,
+        "icon": "",
+        "iconPosition": "left",
+        "iconInnerPosition": "inside",
+        "x": 790,
+        "y": 490,
+        "wires": [
+            [
+                "f6b8d0e2a4c50007"
+            ]
+        ]
+    },
+    {
+        "id": "f6b8d0e2a4c50007",
+        "type": "change",
+        "z": "a9c1e3f5b7d00003",
+        "name": "Draft time",
+        "rules": [
+            {
+                "t": "set",
+                "p": "visitDraft.time",
+                "pt": "flow",
+                "to": "payload",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1010,
+        "y": 490,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "f6b8d0e2a4c5000a",
+        "type": "ui-text-input",
+        "z": "a9c1e3f5b7d00003",
+        "group": "f6b8d0e2a4c50003",
+        "name": "Visit reason",
+        "label": "Reason",
+        "order": 3,
+        "width": 0,
+        "height": 0,
+        "topic": "topic",
+        "topicType": "msg",
+        "mode": "text",
+        "tooltip": "",
+        "delay": 300,
+        "passthru": false,
+        "sendOnDelay": true,
+        "sendOnBlur": true,
+        "sendOnEnter": false,
+        "className": "",
+        "clearable": false,
+        "sendOnClear": false,
+        "icon": "",
+        "iconPosition": "left",
+        "iconInnerPosition": "inside",
+        "x": 790,
+        "y": 540,
+        "wires": [
+            [
+                "f6b8d0e2a4c50009"
+            ]
+        ]
+    },
+    {
+        "id": "f6b8d0e2a4c50009",
+        "type": "change",
+        "z": "a9c1e3f5b7d00003",
+        "name": "Draft reason",
+        "rules": [
+            {
+                "t": "set",
+                "p": "visitDraft.reason",
+                "pt": "flow",
+                "to": "payload",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1010,
+        "y": 540,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "f6b8d0e2a4c5000c",
+        "type": "ui-text-input",
+        "z": "a9c1e3f5b7d00003",
+        "group": "f6b8d0e2a4c50003",
+        "name": "Visit diagnosis",
+        "label": "",
+        "order": 8,
+        "width": 0,
+        "height": 3,
+        "topic": "topic",
+        "topicType": "msg",
+        "mode": "textarea",
+        "tooltip": "",
+        "delay": 300,
+        "passthru": false,
+        "sendOnDelay": true,
+        "sendOnBlur": true,
+        "sendOnEnter": false,
+        "className": "",
+        "clearable": false,
+        "sendOnClear": false,
+        "icon": "",
+        "iconPosition": "left",
+        "iconInnerPosition": "inside",
+        "x": 790,
+        "y": 590,
+        "wires": [
+            [
+                "f6b8d0e2a4c5000b"
+            ]
+        ]
+    },
+    {
+        "id": "f6b8d0e2a4c5000b",
+        "type": "change",
+        "z": "a9c1e3f5b7d00003",
+        "name": "Draft diagnosis",
+        "rules": [
+            {
+                "t": "set",
+                "p": "visitDraft.diagnosis",
+                "pt": "flow",
+                "to": "payload",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1010,
+        "y": 590,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "f6b8d0e2a4c5000e",
+        "type": "ui-text-input",
+        "z": "a9c1e3f5b7d00003",
+        "group": "f6b8d0e2a4c50003",
+        "name": "Visit therapy",
+        "label": "",
+        "order": 10,
+        "width": 0,
+        "height": 3,
+        "topic": "topic",
+        "topicType": "msg",
+        "mode": "textarea",
+        "tooltip": "",
+        "delay": 300,
+        "passthru": false,
+        "sendOnDelay": true,
+        "sendOnBlur": true,
+        "sendOnEnter": false,
+        "className": "",
+        "clearable": false,
+        "sendOnClear": false,
+        "icon": "",
+        "iconPosition": "left",
+        "iconInnerPosition": "inside",
+        "x": 790,
+        "y": 640,
+        "wires": [
+            [
+                "f6b8d0e2a4c5000d"
+            ]
+        ]
+    },
+    {
+        "id": "f6b8d0e2a4c5000d",
+        "type": "change",
+        "z": "a9c1e3f5b7d00003",
+        "name": "Draft therapy",
+        "rules": [
+            {
+                "t": "set",
+                "p": "visitDraft.therapy",
+                "pt": "flow",
+                "to": "payload",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1010,
+        "y": 640,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "f6b8d0e2a4c50010",
+        "type": "ui-text-input",
+        "z": "a9c1e3f5b7d00003",
+        "group": "f6b8d0e2a4c50003",
+        "name": "Visit notes",
+        "label": "",
+        "order": 12,
+        "width": 0,
+        "height": 3,
+        "topic": "topic",
+        "topicType": "msg",
+        "mode": "textarea",
+        "tooltip": "",
+        "delay": 300,
+        "passthru": false,
+        "sendOnDelay": true,
+        "sendOnBlur": true,
+        "sendOnEnter": false,
+        "className": "",
+        "clearable": false,
+        "sendOnClear": false,
+        "icon": "",
+        "iconPosition": "left",
+        "iconInnerPosition": "inside",
+        "x": 790,
+        "y": 690,
+        "wires": [
+            [
+                "f6b8d0e2a4c5000f"
+            ]
+        ]
+    },
+    {
+        "id": "f6b8d0e2a4c5000f",
+        "type": "change",
+        "z": "a9c1e3f5b7d00003",
+        "name": "Draft notes",
+        "rules": [
+            {
+                "t": "set",
+                "p": "visitDraft.notes",
+                "pt": "flow",
+                "to": "payload",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1010,
+        "y": 690,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "f6b8d0e2a4c50011",
+        "type": "ui-markdown",
+        "z": "a9c1e3f5b7d00003",
+        "group": "f6b8d0e2a4c50003",
+        "name": "Label diagnosis",
+        "order": 7,
+        "width": 0,
+        "height": 0,
+        "content": "**Diagnosis**\n",
+        "className": "",
+        "x": 1230,
+        "y": 590,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "f6b8d0e2a4c50012",
+        "type": "ui-markdown",
+        "z": "a9c1e3f5b7d00003",
+        "group": "f6b8d0e2a4c50003",
+        "name": "Label therapy",
+        "order": 9,
+        "width": 0,
+        "height": 0,
+        "content": "**Therapy**\n",
+        "className": "",
+        "x": 1230,
+        "y": 640,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "f6b8d0e2a4c50013",
+        "type": "ui-markdown",
+        "z": "a9c1e3f5b7d00003",
+        "group": "f6b8d0e2a4c50003",
+        "name": "Label notes",
+        "order": 11,
+        "width": 0,
+        "height": 0,
+        "content": "**Notes**\n",
+        "className": "",
+        "x": 1230,
+        "y": 690,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "f6b8d0e2a4c50017",
+        "type": "ui-button",
+        "z": "a9c1e3f5b7d00003",
+        "group": "e5a7c9d1f3b40002",
+        "name": "New visit",
+        "label": "+ New visit",
+        "order": 2,
+        "width": 0,
+        "height": 1,
+        "emulateClick": false,
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "className": "",
+        "icon": "",
+        "iconPosition": "left",
+        "payload": "",
+        "payloadType": "str",
+        "topic": "topic",
+        "topicType": "msg",
+        "buttonColor": "",
+        "textColor": "",
+        "iconColor": "",
+        "enableClick": true,
+        "enablePointerdown": false,
+        "pointerdownPayload": "",
+        "pointerdownPayloadType": "str",
+        "enablePointerup": false,
+        "pointerupPayload": "",
+        "pointerupPayloadType": "str",
+        "x": 130,
+        "y": 490,
+        "wires": [
+            [
+                "f6b8d0e2a4c50016"
+            ]
+        ]
+    },
+    {
+        "id": "f6b8d0e2a4c50016",
+        "type": "change",
+        "z": "a9c1e3f5b7d00003",
+        "name": "New visit",
+        "rules": [
+            {
+                "t": "set",
+                "p": "visitDraft",
+                "pt": "flow",
+                "tot": "json",
+                "to": "{\"date\": \"\", \"time\": \"\", \"reason\": \"\", \"diagnosis\": \"\", \"therapy\": \"\", \"notes\": \"\"}"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 350,
+        "y": 490,
+        "wires": [
+            [
+                "f6b8d0e2a4c50018",
+                "f6b8d0e2a4c50019",
+                "f6b8d0e2a4c5001a",
+                "f6b8d0e2a4c5001b",
+                "f6b8d0e2a4c5001c",
+                "f6b8d0e2a4c5001d",
+                "f6b8d0e2a4c50014"
+            ]
+        ]
+    },
+    {
+        "id": "f6b8d0e2a4c50014",
+        "type": "change",
+        "z": "a9c1e3f5b7d00003",
+        "name": "Go to visit editor",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "{\"page\":\"Visit Editor\"}",
+                "tot": "json"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 350,
+        "y": 790,
+        "wires": [
+            [
+                "b0d2f4a6c8e10018"
+            ]
+        ]
+    },
+    {
+        "id": "f6b8d0e2a4c5001f",
+        "type": "ui-button",
+        "z": "a9c1e3f5b7d00003",
+        "group": "e5a7c9d1f3b40005",
+        "name": "Edit visit",
+        "label": "Edit visit",
+        "order": 2,
+        "width": 3,
+        "height": 1,
+        "emulateClick": false,
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "className": "",
+        "icon": "",
+        "iconPosition": "left",
+        "payload": "",
+        "payloadType": "str",
+        "topic": "topic",
+        "topicType": "msg",
+        "buttonColor": "",
+        "textColor": "",
+        "iconColor": "",
+        "enableClick": true,
+        "enablePointerdown": false,
+        "pointerdownPayload": "",
+        "pointerdownPayloadType": "str",
+        "enablePointerup": false,
+        "pointerupPayload": "",
+        "pointerupPayloadType": "str",
+        "x": 130,
+        "y": 640,
+        "wires": [
+            [
+                "f6b8d0e2a4c5001e"
+            ]
+        ]
+    },
+    {
+        "id": "f6b8d0e2a4c5001e",
+        "type": "change",
+        "z": "a9c1e3f5b7d00003",
+        "name": "Edit visit",
+        "rules": [
+            {
+                "t": "set",
+                "p": "visitDraft",
+                "pt": "flow",
+                "to": "currentVisit",
+                "tot": "flow"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 350,
+        "y": 640,
+        "wires": [
+            [
+                "f6b8d0e2a4c50018",
+                "f6b8d0e2a4c50019",
+                "f6b8d0e2a4c5001a",
+                "f6b8d0e2a4c5001b",
+                "f6b8d0e2a4c5001c",
+                "f6b8d0e2a4c5001d",
+                "f6b8d0e2a4c50014"
+            ]
+        ]
+    },
+    {
+        "id": "f6b8d0e2a4c50018",
+        "type": "change",
+        "z": "a9c1e3f5b7d00003",
+        "name": "Fill date",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "visitDraft.date",
+                "tot": "flow"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 570,
+        "y": 440,
+        "wires": [
+            [
+                "f6b8d0e2a4c50006"
+            ]
+        ]
+    },
+    {
+        "id": "f6b8d0e2a4c50019",
+        "type": "change",
+        "z": "a9c1e3f5b7d00003",
+        "name": "Fill time",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "visitDraft.time",
+                "tot": "flow"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 570,
+        "y": 490,
+        "wires": [
+            [
+                "f6b8d0e2a4c50008"
+            ]
+        ]
+    },
+    {
+        "id": "f6b8d0e2a4c5001a",
+        "type": "change",
+        "z": "a9c1e3f5b7d00003",
+        "name": "Fill reason",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "visitDraft.reason",
+                "tot": "flow"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 570,
+        "y": 540,
+        "wires": [
+            [
+                "f6b8d0e2a4c5000a"
+            ]
+        ]
+    },
+    {
+        "id": "f6b8d0e2a4c5001b",
+        "type": "change",
+        "z": "a9c1e3f5b7d00003",
+        "name": "Fill diagnosis",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "visitDraft.diagnosis",
+                "tot": "flow"
+            },
+            {
+                "t": "change",
+                "p": "payload",
+                "pt": "msg",
+                "from": "^",
+                "fromt": "re",
+                "to": "\n",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 570,
+        "y": 590,
+        "wires": [
+            [
+                "f6b8d0e2a4c5000c"
+            ]
+        ]
+    },
+    {
+        "id": "f6b8d0e2a4c5001c",
+        "type": "change",
+        "z": "a9c1e3f5b7d00003",
+        "name": "Fill therapy",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "visitDraft.therapy",
+                "tot": "flow"
+            },
+            {
+                "t": "change",
+                "p": "payload",
+                "pt": "msg",
+                "from": "^",
+                "fromt": "re",
+                "to": "\n",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 570,
+        "y": 640,
+        "wires": [
+            [
+                "f6b8d0e2a4c5000e"
+            ]
+        ]
+    },
+    {
+        "id": "f6b8d0e2a4c5001d",
+        "type": "change",
+        "z": "a9c1e3f5b7d00003",
+        "name": "Fill notes",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "visitDraft.notes",
+                "tot": "flow"
+            },
+            {
+                "t": "change",
+                "p": "payload",
+                "pt": "msg",
+                "from": "^",
+                "fromt": "re",
+                "to": "\n",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 570,
+        "y": 690,
+        "wires": [
+            [
+                "f6b8d0e2a4c50010"
+            ]
+        ]
+    },
+    {
+        "id": "f6b8d0e2a4c50021",
+        "type": "ui-button",
+        "z": "a9c1e3f5b7d00003",
+        "group": "f6b8d0e2a4c50002",
+        "name": "Editor back",
+        "label": "← Back to patient",
+        "order": 1,
+        "width": 3,
+        "height": 1,
+        "emulateClick": false,
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "className": "",
+        "icon": "",
+        "iconPosition": "left",
+        "payload": "",
+        "payloadType": "str",
+        "topic": "topic",
+        "topicType": "msg",
+        "buttonColor": "",
+        "textColor": "",
+        "iconColor": "",
+        "enableClick": true,
+        "enablePointerdown": false,
+        "pointerdownPayload": "",
+        "pointerdownPayloadType": "str",
+        "enablePointerup": false,
+        "pointerupPayload": "",
+        "pointerupPayloadType": "str",
+        "x": 130,
+        "y": 1240,
+        "wires": [
+            [
+                "f6b8d0e2a4c50020"
+            ]
+        ]
+    },
+    {
+        "id": "f6b8d0e2a4c50020",
+        "type": "change",
+        "z": "a9c1e3f5b7d00003",
+        "name": "Editor back",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "{\"page\":\"Patient Detail\"}",
+                "tot": "json"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 350,
+        "y": 1240,
+        "wires": [
+            [
+                "b0d2f4a6c8e10020"
+            ]
+        ]
+    },
+    {
+        "id": "f6b8d0e2a4c5002a",
+        "type": "ui-button",
+        "z": "a9c1e3f5b7d00003",
+        "group": "f6b8d0e2a4c50003",
+        "name": "Save visit",
+        "label": "Save visit",
+        "order": 20,
+        "width": 0,
+        "height": 1,
+        "emulateClick": false,
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "className": "",
+        "icon": "",
+        "iconPosition": "left",
+        "payload": "",
+        "payloadType": "str",
+        "topic": "topic",
+        "topicType": "msg",
+        "buttonColor": "",
+        "textColor": "",
+        "iconColor": "",
+        "enableClick": true,
+        "enablePointerdown": false,
+        "pointerdownPayload": "",
+        "pointerdownPayloadType": "str",
+        "enablePointerup": false,
+        "pointerupPayload": "",
+        "pointerupPayloadType": "str",
+        "x": 130,
+        "y": 940,
+        "wires": [
+            [
+                "f6b8d0e2a4c50029"
+            ]
+        ]
+    },
+    {
+        "id": "f6b8d0e2a4c50029",
+        "type": "change",
+        "z": "a9c1e3f5b7d00003",
+        "name": "Visit body",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "visitDraft",
+                "tot": "flow"
+            },
+            {
+                "t": "set",
+                "p": "payload.chatID",
+                "pt": "msg",
+                "to": "selectedPatient",
+                "tot": "global"
+            },
+            {
+                "t": "change",
+                "p": "payload.diagnosis",
+                "pt": "msg",
+                "from": "^\\s+",
+                "fromt": "re",
+                "to": "",
+                "tot": "str"
+            },
+            {
+                "t": "change",
+                "p": "payload.therapy",
+                "pt": "msg",
+                "from": "^\\s+",
+                "fromt": "re",
+                "to": "",
+                "tot": "str"
+            },
+            {
+                "t": "change",
+                "p": "payload.notes",
+                "pt": "msg",
+                "from": "^\\s+",
+                "fromt": "re",
+                "to": "",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 350,
+        "y": 940,
+        "wires": [
+            [
+                "f6b8d0e2a4c50028"
+            ]
+        ]
+    },
+    {
+        "id": "f6b8d0e2a4c50028",
+        "type": "switch",
+        "z": "a9c1e3f5b7d00003",
+        "name": "New or edit?",
+        "property": "payload.visitID",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "nnull"
+            },
+            {
+                "t": "else"
+            }
+        ],
+        "checkall": "false",
+        "repair": false,
+        "outputs": 2,
+        "x": 570,
+        "y": 940,
+        "wires": [
+            [
+                "f6b8d0e2a4c50027"
+            ],
+            [
+                "f6b8d0e2a4c50026"
+            ]
+        ]
+    },
+    {
+        "id": "f6b8d0e2a4c50026",
+        "type": "http request",
+        "z": "a9c1e3f5b7d00003",
+        "name": "Add visit",
+        "method": "POST",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "http://host.docker.internal:8080/add_visit",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 790,
+        "y": 990,
+        "wires": [
+            [
+                "f6b8d0e2a4c50025"
+            ]
+        ]
+    },
+    {
+        "id": "f6b8d0e2a4c50027",
+        "type": "http request",
+        "z": "a9c1e3f5b7d00003",
+        "name": "Update visit",
+        "method": "PUT",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "http://host.docker.internal:8080/update_visit",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 790,
+        "y": 940,
+        "wires": [
+            [
+                "f6b8d0e2a4c50025"
+            ]
+        ]
+    },
+    {
+        "id": "f6b8d0e2a4c50025",
+        "type": "switch",
+        "z": "a9c1e3f5b7d00003",
+        "name": "Visit saved?",
+        "property": "statusCode",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "200",
+                "vt": "num"
+            },
+            {
+                "t": "else"
+            }
+        ],
+        "checkall": "false",
+        "repair": false,
+        "outputs": 2,
+        "x": 1010,
+        "y": 940,
+        "wires": [
+            [
+                "f6b8d0e2a4c50022",
+                "f6b8d0e2a4c50024"
+            ],
+            [
+                "f6b8d0e2a4c50023"
+            ]
+        ]
+    },
+    {
+        "id": "f6b8d0e2a4c50022",
+        "type": "change",
+        "z": "a9c1e3f5b7d00003",
+        "name": "Visit saved",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "Visit saved",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1230,
+        "y": 940,
+        "wires": [
+            [
+                "b0d2f4a6c8e1001a"
+            ]
+        ]
+    },
+    {
+        "id": "f6b8d0e2a4c50023",
+        "type": "change",
+        "z": "a9c1e3f5b7d00003",
+        "name": "Error saving visit",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "Error saving visit",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1230,
+        "y": 990,
+        "wires": [
+            [
+                "b0d2f4a6c8e1001a"
+            ]
+        ]
+    },
+    {
+        "id": "f6b8d0e2a4c50024",
+        "type": "change",
+        "z": "a9c1e3f5b7d00003",
+        "name": "Refresh visits",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "{}",
+                "tot": "json"
+            },
+            {
+                "t": "set",
+                "p": "payload.chatID",
+                "pt": "msg",
+                "to": "selectedPatient",
+                "tot": "global"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1230,
+        "y": 1040,
+        "wires": [
+            [
+                "b0d2f4a6c8e1001c",
+                "b0d2f4a6c8e1001e"
+            ]
+        ]
+    },
+    {
+        "id": "b0d2f4a6c8e10001",
+        "type": "comment",
+        "z": "cb86edee6af0e6cc",
+        "name": "Logo",
+        "info": "",
+        "x": 64,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "b0d2f4a6c8e10002",
+        "type": "comment",
+        "z": "cb86edee6af0e6cc",
+        "name": "Doctor login (checked by the catalog)",
+        "info": "",
+        "x": 179,
+        "y": 290,
+        "wires": []
+    },
+    {
+        "id": "b0d2f4a6c8e10003",
+        "type": "comment",
+        "z": "98eab5396367cef7",
+        "name": "Every 5 seconds: tables filtered by the logged doctor",
+        "info": "",
+        "x": 235,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "b0d2f4a6c8e10004",
+        "type": "comment",
+        "z": "a9c1e3f5b7d00001",
+        "name": "Click on a request -> Create Appointment page",
+        "info": "",
+        "x": 207,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "b0d2f4a6c8e10005",
+        "type": "link out",
+        "z": "98eab5396367cef7",
+        "name": "Open request",
+        "mode": "link",
+        "links": [
+            "b0d2f4a6c8e10006"
+        ],
+        "x": 1010,
+        "y": 90,
+        "wires": []
+    },
+    {
+        "id": "b0d2f4a6c8e10006",
+        "type": "link in",
+        "z": "a9c1e3f5b7d00001",
+        "name": "Open request",
+        "links": [
+            "b0d2f4a6c8e10005"
+        ],
+        "x": 130,
+        "y": 90,
+        "wires": [
+            [
+                "3e77c67f993067f4"
+            ]
+        ]
+    },
+    {
+        "id": "b0d2f4a6c8e10007",
+        "type": "comment",
+        "z": "a9c1e3f5b7d00001",
+        "name": "Confirm the appointment: MQTT to the Telegram bot, back to Doctor Page",
+        "info": "",
+        "x": 295,
+        "y": 190,
+        "wires": []
+    },
+    {
+        "id": "b0d2f4a6c8e10008",
+        "type": "comment",
+        "z": "a9c1e3f5b7d00002",
+        "name": "Click on a patient -> Patient Detail page",
+        "info": "",
+        "x": 193,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "b0d2f4a6c8e10009",
+        "type": "link out",
+        "z": "98eab5396367cef7",
+        "name": "Open patient",
+        "mode": "link",
+        "links": [
+            "b0d2f4a6c8e1000a"
+        ],
+        "x": 1010,
+        "y": 190,
+        "wires": []
+    },
+    {
+        "id": "b0d2f4a6c8e1000a",
+        "type": "link in",
+        "z": "a9c1e3f5b7d00002",
+        "name": "Open patient",
+        "links": [
+            "b0d2f4a6c8e10009"
+        ],
+        "x": 130,
+        "y": 90,
+        "wires": [
+            [
+                "d4f6b8c0e2a30010"
+            ]
+        ]
+    },
+    {
+        "id": "b0d2f4a6c8e1000b",
+        "type": "ui-control",
+        "z": "a9c1e3f5b7d00002",
+        "name": "Change page",
+        "ui": "56556cda8fa1a52e",
+        "events": "change",
+        "x": 790,
+        "y": 290,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "b0d2f4a6c8e1000d",
+        "type": "comment",
+        "z": "a9c1e3f5b7d00002",
+        "name": "Back to the patients list",
+        "info": "",
+        "x": 137,
+        "y": 390,
+        "wires": []
+    },
+    {
+        "id": "b0d2f4a6c8e1000e",
+        "type": "ui-control",
+        "z": "a9c1e3f5b7d00002",
+        "name": "Change page",
+        "ui": "56556cda8fa1a52e",
+        "events": "change",
+        "x": 570,
+        "y": 440,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "b0d2f4a6c8e1000f",
+        "type": "comment",
+        "z": "a9c1e3f5b7d00002",
+        "name": "Save doctor notes (PUT update_general_info)",
+        "info": "",
+        "x": 200,
+        "y": 540,
+        "wires": []
+    },
+    {
+        "id": "b0d2f4a6c8e10010",
+        "type": "comment",
+        "z": "a9c1e3f5b7d00002",
+        "name": "ThingSpeak zone (to be completed)",
+        "info": "",
+        "x": 165,
         "y": 740,
+        "wires": []
+    },
+    {
+        "id": "b0d2f4a6c8e10011",
+        "type": "comment",
+        "z": "a9c1e3f5b7d00003",
+        "name": "Visits list (GET get_visits) and visit report",
+        "info": "",
+        "x": 207,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "b0d2f4a6c8e10012",
+        "type": "link out",
+        "z": "a9c1e3f5b7d00002",
+        "name": "Load visits",
+        "mode": "link",
+        "links": [
+            "b0d2f4a6c8e10013"
+        ],
+        "x": 570,
+        "y": 340,
+        "wires": []
+    },
+    {
+        "id": "b0d2f4a6c8e10013",
+        "type": "link in",
+        "z": "a9c1e3f5b7d00003",
+        "name": "Load visits",
+        "links": [
+            "b0d2f4a6c8e10012"
+        ],
+        "x": 130,
+        "y": 90,
+        "wires": [
+            [
+                "f6b8d0e2a4c50004"
+            ]
+        ]
+    },
+    {
+        "id": "b0d2f4a6c8e10014",
+        "type": "ui-control",
+        "z": "a9c1e3f5b7d00003",
+        "name": "Change page",
+        "ui": "56556cda8fa1a52e",
+        "events": "change",
+        "x": 1010,
+        "y": 140,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "b0d2f4a6c8e10015",
+        "type": "comment",
+        "z": "a9c1e3f5b7d00003",
+        "name": "Visit report: back to the patient",
+        "info": "",
+        "x": 165,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "b0d2f4a6c8e10016",
+        "type": "ui-control",
+        "z": "a9c1e3f5b7d00003",
+        "name": "Change page",
+        "ui": "56556cda8fa1a52e",
+        "events": "change",
+        "x": 570,
+        "y": 290,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "b0d2f4a6c8e10017",
+        "type": "comment",
+        "z": "a9c1e3f5b7d00003",
+        "name": "Visit editor: '+ New visit' (empty) and 'Edit visit' (filled) use the same Fill nodes",
+        "info": "",
+        "x": 347,
+        "y": 390,
+        "wires": []
+    },
+    {
+        "id": "b0d2f4a6c8e10018",
+        "type": "ui-control",
+        "z": "a9c1e3f5b7d00003",
+        "name": "Change page",
+        "ui": "56556cda8fa1a52e",
+        "events": "change",
+        "x": 570,
+        "y": 790,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "b0d2f4a6c8e10019",
+        "type": "comment",
+        "z": "a9c1e3f5b7d00003",
+        "name": "Save visit: POST add_visit (new) or PUT update_visit (edit)",
+        "info": "",
+        "x": 256,
+        "y": 890,
+        "wires": []
+    },
+    {
+        "id": "b0d2f4a6c8e1001a",
+        "type": "ui-notification",
+        "z": "a9c1e3f5b7d00003",
+        "ui": "56556cda8fa1a52e",
+        "position": "top right",
+        "colorDefault": true,
+        "color": "#000000",
+        "displayTime": "3",
+        "showCountdown": true,
+        "outputs": 1,
+        "allowDismiss": true,
+        "dismissText": "Close",
+        "allowConfirm": false,
+        "confirmText": "Confirm",
+        "raw": false,
+        "className": "",
+        "name": "Visit notification",
+        "x": 1450,
+        "y": 940,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "b0d2f4a6c8e1001b",
+        "type": "link in",
+        "z": "a9c1e3f5b7d00003",
+        "name": "Refresh visits",
+        "links": [
+            "b0d2f4a6c8e1001c"
+        ],
+        "x": 130,
+        "y": 140,
+        "wires": [
+            [
+                "f6b8d0e2a4c50004"
+            ]
+        ]
+    },
+    {
+        "id": "b0d2f4a6c8e1001c",
+        "type": "link out",
+        "z": "a9c1e3f5b7d00003",
+        "name": "Refresh visits",
+        "mode": "link",
+        "links": [
+            "b0d2f4a6c8e1001b"
+        ],
+        "x": 1450,
+        "y": 1040,
+        "wires": []
+    },
+    {
+        "id": "b0d2f4a6c8e1001d",
+        "type": "ui-control",
+        "z": "a9c1e3f5b7d00003",
+        "name": "Change page",
+        "ui": "56556cda8fa1a52e",
+        "events": "change",
+        "x": 1670,
+        "y": 1090,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "b0d2f4a6c8e1001e",
+        "type": "change",
+        "z": "a9c1e3f5b7d00003",
+        "name": "Back to patient page",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "{\"page\":\"Patient Detail\"}",
+                "tot": "json"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1450,
+        "y": 1090,
+        "wires": [
+            [
+                "b0d2f4a6c8e1001d"
+            ]
+        ]
+    },
+    {
+        "id": "b0d2f4a6c8e1001f",
+        "type": "comment",
+        "z": "a9c1e3f5b7d00003",
+        "name": "Visit editor: back to the patient",
+        "info": "",
+        "x": 165,
+        "y": 1190,
+        "wires": []
+    },
+    {
+        "id": "b0d2f4a6c8e10020",
+        "type": "ui-control",
+        "z": "a9c1e3f5b7d00003",
+        "name": "Change page",
+        "ui": "56556cda8fa1a52e",
+        "events": "change",
+        "x": 570,
+        "y": 1240,
         "wires": [
             []
         ]

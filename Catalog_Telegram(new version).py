@@ -503,6 +503,13 @@ class CatalogService:
                     })
             return json.dumps(patient_list)
 
+        # VISITS (Node-RED): lista delle visite fatte di un paziente
+        elif path[0] == "get_visits":
+            patient = self.find_patient_by_id(params.get("chatID"))
+            if patient is None:
+                raise cherrypy.HTTPError(404, "Patient not found")
+            return json.dumps(patient.get("visits", []))
+
         # DOCTORS: lista dei medici senza credenziali (usata dal bot per controllare il nome)
         elif path[0] == "get_doctors":
             doctors = []
@@ -642,6 +649,28 @@ class CatalogService:
                     })
             raise cherrypy.HTTPError(401, "Wrong username or password")
 
+        # VISITS (Node-RED): aggiunge una nuova visita con un nuovo visitID (v1, v2, ...)
+        elif path[0] == "add_visit":
+            body = json.loads(cherrypy.request.body.read())
+            patient = self.find_patient_by_id(body.get("chatID"))
+            if patient is None:
+                raise cherrypy.HTTPError(404, "Patient not found")
+
+            visits = patient.setdefault("visits", [])
+            numbers = [int(v["visitID"][1:]) for v in visits if str(v.get("visitID", "")).startswith("v") and v["visitID"][1:].isdigit()]
+            new_visit = {
+                "visitID": "v" + str(max(numbers, default=0) + 1),
+                "date": body.get("date", ""),
+                "time": body.get("time", ""),
+                "reason": body.get("reason", ""),
+                "diagnosis": body.get("diagnosis", ""),
+                "therapy": body.get("therapy", ""),
+                "notes": body.get("notes", "")
+            }
+            visits.append(new_visit)
+            self.save_database()
+            return json.dumps(new_visit)
+
 
 
 
@@ -660,8 +689,24 @@ class CatalogService:
         '''
 
         ########################### NUOVO PUT ##################################
-        
-        if path[0] == "update_general_info":
+
+        # VISITS (Node-RED): modifica la visita indicata dal visitID
+        if path[0] == "update_visit":
+            body = json.loads(cherrypy.request.body.read())
+            patient = self.find_patient_by_id(body.get("chatID"))
+            if patient is None:
+                raise cherrypy.HTTPError(404, "Patient not found")
+
+            for v in patient.get("visits", []):
+                if v.get("visitID") == body.get("visitID"):
+                    for key in ("date", "time", "reason", "diagnosis", "therapy", "notes"):
+                        if key in body:
+                            v[key] = body[key]
+                    self.save_database()
+                    return json.dumps(v)
+            raise cherrypy.HTTPError(404, "Visit not found")
+
+        elif path[0] == "update_general_info":
             change_body = cherrypy.request.body.read()
             change_body = json.loads(change_body)
             chatID = int(change_body["chatID"])

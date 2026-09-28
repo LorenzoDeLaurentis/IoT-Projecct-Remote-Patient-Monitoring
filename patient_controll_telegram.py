@@ -48,6 +48,9 @@ class PatientMonitoringBot:
         try:
             # Trasforma il payload (stringa) in un dizionario Python
             msg_data = json.loads(payload)
+            # vital_sign_alert codifica il messaggio due volte: se è ancora una stringa, decodifico di nuovo
+            if isinstance(msg_data, str):
+                msg_data = json.loads(msg_data)
             print(f"MQTT ricevuto su {topic}: {msg_data}")
 
             # 1. Caso: Conferma Appuntamento da Node-RED
@@ -239,7 +242,7 @@ class PatientMonitoringBot:
                     self.bot.sendMessage(chatID, "Error saving appointment. Try again.")
                 del self.pending_registrations[chatID]
             except Exception as e:
-                self.bot.sendMessage(chatID, f"Errore: {e}")
+                self.bot.sendMessage(chatID, f"Error: {e}")
            
             self.send_main_menu(chatID)
 
@@ -307,7 +310,7 @@ class PatientMonitoringBot:
                             f"Blood Pressure: {data['blood_pressure_systolic']}/{data['blood_pressure_diastolic']} mmHg")
                     self.bot.sendMessage(chatID, msg, parse_mode='Markdown')
                 else:
-                    self.bot.sendMessage(chatID, "Dati non disponibili al momento.")
+                    self.bot.sendMessage(chatID, "Data not available at the moment.")
             except Exception as e:
                 self.bot.sendMessage(chatID, f"Connection error: {e}")
             self.send_main_menu(chatID)
@@ -383,7 +386,7 @@ class PatientMonitoringBot:
         # TRENDS SETTIMANALI: (da fare)
         elif query_data == 'stats':
             # da fare
-            self.bot.sendMessage(chatID, "Ecco il tuo trend settimanale: [Link ThingSpeak]")
+            self.bot.sendMessage(chatID, "Here is your weekly trend: [ThingSpeak link]")
             self.send_main_menu(chatID)
         
         # ALERTS: (creare gli alert del sensore o gli alert inviati direttamente dal dottore)
@@ -403,7 +406,7 @@ class PatientMonitoringBot:
 
         # PROFILE:     (finito)  
         elif query_data == 'profile':
-            self.bot.sendMessage(chatID, "Ecco i tuoi dati registrati nel sistema:")
+            self.bot.sendMessage(chatID, "Here is your data registered in the system:")
             try:
                 res = requests.get(f"{self.catalog_url}/search_patient?chatID={chatID}")
                 if res.status_code == 200:
