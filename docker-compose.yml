@@ -14,319 +14,328 @@
 #   patient_bot           – Telegram bot patient interface
 ###############################################################################
 
-version: "3.9"
+# version: "3.9"
 
-networks:
-  iot_net:
-    driver: bridge
+# networks:
+#   iot_net:
+#     driver: bridge
 
-volumes:
-  mosquitto_data:
-  timeseries_data:
-  nodered_data:
+# volumes:
+#   mosquitto_data:
+#   timeseries_data:
+#   nodered_data:
 
 # ─── Shared environment helpers ─────────────────────────────────────────────
-x-catalog-env: &catalog-env
-  HEALTH_CATALOG_URL: http://health_catalog:5000
+# x-catalog-env: &catalog-env
+#   HEALTH_CATALOG_URL: http://health_catalog:5000
 
-x-mqtt-env: &mqtt-env
-  MQTT_BROKER_HOST: message_broker
-  MQTT_BROKER_PORT: "1883"
+# x-mqtt-env: &mqtt-env
+#   MQTT_BROKER_HOST: message_broker
+#   MQTT_BROKER_PORT: "1883"
 
-x-common-env: &common-env
-  <<: *catalog-env
-  <<: *mqtt-env
+# x-common-env: &common-env
+#   <<: *catalog-env
+#   <<: *mqtt-env
 
 ###############################################################################
-services:
+# services:
 
   # ── 1. Message Broker (Mosquitto) ──────────────────────────────────────────
-  message_broker:
-    image: eclipse-mosquitto:2.0
-    container_name: message_broker
-    networks: [iot_net]
-    ports:
-      - "1883:1883"   # MQTT
-      - "9001:9001"   # WebSocket (optional, for browser clients)
-    volumes:
-      - mosquitto_data:/mosquitto/data
-      - ./infra/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "mosquitto_sub", "-t", "$$SYS/#", "-C", "1", "-i", "healthcheck", "-W", "3"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+#   message_broker:
+#     image: eclipse-mosquitto:2.0
+#     container_name: message_broker
+#     networks: [iot_net]
+#     ports:
+#       - "1883:1883"   # MQTT
+#       - "9001:9001"   # WebSocket (optional, for browser clients)
+#     volumes:
+#       - mosquitto_data:/mosquitto/data
+#       - ./infra/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+#     restart: unless-stopped
+#     healthcheck:
+#       test: ["CMD", "mosquitto_sub", "-t", "$$SYS/#", "-C", "1", "-i", "healthcheck", "-W", "3"]
+#       interval: 10s
+#       timeout: 5s
+#       retries: 5
 
   # ── 2. Health Catalog ──────────────────────────────────────────────────────
-  health_catalog:
-    build:
-      context: ./health_catalog
-      dockerfile: Dockerfile
-    container_name: health_catalog
-    networks: [iot_net]
-    ports:
-      - "5000:5000"
-    environment:
-      FLASK_ENV: production
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+#   health_catalog:
+#     build:
+#       context: ./health_catalog
+#       dockerfile: Dockerfile
+#     container_name: health_catalog
+#     networks: [iot_net]
+#     ports:
+#       - "5000:5000"
+#     environment:
+#       FLASK_ENV: production
+#     restart: unless-stopped
+#     healthcheck:
+#       test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+#       interval: 10s
+#       timeout: 5s
+#       retries: 5
 
   # ── 3. Sensor Connector ────────────────────────────────────────────────────
-  sensor_connector:
-    build:
-      context: ./sensor_connector
-      dockerfile: Dockerfile
-    container_name: sensor_connector
-    networks: [iot_net]
-    ports:
-      - "5003:5003"
-    environment:
-      <<: *common-env
-    depends_on:
-      health_catalog:
-        condition: service_healthy
-      message_broker:
-        condition: service_healthy
-    restart: unless-stopped
+#   sensor_connector:
+#     build:
+#       context: ./sensor_connector
+#       dockerfile: Dockerfile
+#     container_name: sensor_connector
+#     networks: [iot_net]
+#     ports:
+#       - "5003:5003"
+#     environment:
+#       <<: *common-env
+#     depends_on:
+#       health_catalog:
+#         condition: service_healthy
+#       message_broker:
+#         condition: service_healthy
+#     restart: unless-stopped
 
   # ── 4. TimeSeriesDB Adaptor ────────────────────────────────────────────────
-  timeseries_adaptor:
-    build:
-      context: ./timeseries_adaptor
-      dockerfile: Dockerfile
-    container_name: timeseries_adaptor
-    networks: [iot_net]
-    ports:
-      - "5001:5001"
-    environment:
-      <<: *common-env
-    volumes:
-      - timeseries_data:/data
-    depends_on:
-      health_catalog:
-        condition: service_healthy
-      message_broker:
-        condition: service_healthy
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+#   timeseries_adaptor:
+#     build:
+#       context: ./timeseries_adaptor
+#       dockerfile: Dockerfile
+#     container_name: timeseries_adaptor
+#     networks: [iot_net]
+#     ports:
+#       - "5001:5001"
+#     environment:
+#       <<: *common-env
+#     volumes:
+#       - timeseries_data:/data
+#     depends_on:
+#       health_catalog:
+#         condition: service_healthy
+#       message_broker:
+#         condition: service_healthy
+#     restart: unless-stopped
+#     healthcheck:
+#       test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
+#       interval: 10s
+#       timeout: 5s
+#       retries: 5
 
   # ── 5. Data Processor ─────────────────────────────────────────────────────
-  data_processor:
-    build:
-      context: ./data_processor
-      dockerfile: Dockerfile
-    container_name: data_processor
-    networks: [iot_net]
-    ports:
-      - "5002:5002"
-    environment:
-      <<: *common-env
-      TIMESERIES_ADAPTOR_URL: http://timeseries_adaptor:5001
-      WINDOW_SECONDS: "900"   # 15-minute rolling window
-    depends_on:
-      health_catalog:
-        condition: service_healthy
-      message_broker:
-        condition: service_healthy
-      timeseries_adaptor:
-        condition: service_healthy
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5002/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+#   data_processor:
+#     build:
+#       context: ./data_processor
+#       dockerfile: Dockerfile
+#     container_name: data_processor
+#     networks: [iot_net]
+#     ports:
+#       - "5002:5002"
+#     environment:
+#       <<: *common-env
+#       TIMESERIES_ADAPTOR_URL: http://timeseries_adaptor:5001
+#       WINDOW_SECONDS: "900"   # 15-minute rolling window
+#     depends_on:
+#       health_catalog:
+#         condition: service_healthy
+#       message_broker:
+#         condition: service_healthy
+#       timeseries_adaptor:
+#         condition: service_healthy
+#     restart: unless-stopped
+#     healthcheck:
+#       test: ["CMD", "curl", "-f", "http://localhost:5002/health"]
+#       interval: 10s
+#       timeout: 5s
+#       retries: 5
 
   # ── 6. ThingSpeak Forwarder ───────────────────────────────────────────────
-  thingspeak_forwarder:
-    build:
-      context: ./thingspeak_forwarder
-      dockerfile: Dockerfile
-    container_name: thingspeak_forwarder
-    networks: [iot_net]
-    ports:
-      - "5004:5004"
-    environment:
-      <<: *common-env
+#   thingspeak_forwarder:
+#     build:
+#       context: ./thingspeak_forwarder
+#       dockerfile: Dockerfile
+#     container_name: thingspeak_forwarder
+#     networks: [iot_net]
+#     ports:
+#       - "5004:5004"
+#     environment:
+#       <<: *common-env
       # ThingSpeak rate-limit window in seconds (free tier = 15s minimum)
-      THINGSPEAK_WRITE_INTERVAL: "15"
-    depends_on:
-      health_catalog:
-        condition: service_healthy
-      message_broker:
-        condition: service_healthy
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5004/health"]
-      interval: 15s
-      timeout: 5s
-      retries: 5
+#       THINGSPEAK_WRITE_INTERVAL: "15"
+#     depends_on:
+#       health_catalog:
+#         condition: service_healthy
+#       message_broker:
+#         condition: service_healthy
+#     restart: unless-stopped
+#     healthcheck:
+#       test: ["CMD", "curl", "-f", "http://localhost:5004/health"]
+#       interval: 15s
+#       timeout: 5s
+#       retries: 5
 
   # ── 7. Vital Sign Alert (Control Strategy) ─────────────────────────────────
-  vital_sign_alert:
-    build:
-      context: ./vital_sign_alert
-      dockerfile: Dockerfile
-    container_name: vital_sign_alert
-    networks: [iot_net]
-    environment:
-      <<: *common-env
-    depends_on:
-      health_catalog:
-        condition: service_healthy
-      message_broker:
-        condition: service_healthy
-    restart: unless-stopped
+#   vital_sign_alert:
+#     build:
+#       context: ./vital_sign_alert
+#       dockerfile: Dockerfile
+#     container_name: vital_sign_alert
+#     networks: [iot_net]
+#     environment:
+#       <<: *common-env
+#     depends_on:
+#       health_catalog:
+#         condition: service_healthy
+#       message_broker:
+#         condition: service_healthy
+#     restart: unless-stopped
 
   # ── 8. Time-Based Reminder (Control Strategy) ──────────────────────────────
-  time_based_reminder:
-    build:
-      context: ./time_based_reminder
-      dockerfile: Dockerfile
-    container_name: time_based_reminder
-    networks: [iot_net]
-    environment:
-      <<: *common-env
-    depends_on:
-      health_catalog:
-        condition: service_healthy
-      message_broker:
-        condition: service_healthy
-    restart: unless-stopped
+#   time_based_reminder:
+#     build:
+#       context: ./time_based_reminder
+#       dockerfile: Dockerfile
+#     container_name: time_based_reminder
+#     networks: [iot_net]
+#     environment:
+#       <<: *common-env
+#     depends_on:
+#       health_catalog:
+#         condition: service_healthy
+#       message_broker:
+#         condition: service_healthy
+#     restart: unless-stopped
 
   # ── 9. Clinician Portal (Node-RED) ────────────────────────────────────────
-  clinician_portal:
-    image: nodered/node-red:3
-    container_name: clinician_portal
-    networks: [iot_net]
-    ports:
-      - "1880:1880"
-    environment:
-      TIMESERIES_ADAPTOR_URL: http://timeseries_adaptor:5001
-      DATA_PROCESSOR_URL: http://data_processor:5002
-      HEALTH_CATALOG_URL: http://health_catalog:5000
-      MQTT_BROKER_HOST: message_broker
-      THINGSPEAK_FORWARDER_URL: http://thingspeak_forwarder:5004
-    volumes:
-      - nodered_data:/data
-      - ./clinician_portal/flows.json:/data/flows.json:ro
-    depends_on:
-      - data_processor
-      - timeseries_adaptor
-      - message_broker
-    restart: unless-stopped
+#   clinician_portal:
+#     image: nodered/node-red:3
+#     container_name: clinician_portal
+#     networks: [iot_net]
+#     ports:
+#       - "1880:1880"
+#     environment:
+#       TIMESERIES_ADAPTOR_URL: http://timeseries_adaptor:5001
+#       DATA_PROCESSOR_URL: http://data_processor:5002
+#       HEALTH_CATALOG_URL: http://health_catalog:5000
+#       MQTT_BROKER_HOST: message_broker
+#       THINGSPEAK_FORWARDER_URL: http://thingspeak_forwarder:5004
+#     volumes:
+#       - nodered_data:/data
+#       - ./clinician_portal/flows.json:/data/flows.json:ro
+#     depends_on:
+#       - data_processor
+#       - timeseries_adaptor
+#       - message_broker
+#     restart: unless-stopped
 
   # ── 10. Patient-Facing App (Telegram Bot) ─────────────────────────────────
-  patient_bot:
-    build:
-      context: ./patient_bot
-      dockerfile: Dockerfile
-    container_name: patient_bot
-    networks: [iot_net]
-    environment:
-      <<: *common-env
-      TELEGRAM_TOKEN: ${TELEGRAM_TOKEN}   # injected from .env file
-      SENSOR_CONNECTOR_URL: http://sensor_connector:5003
-      DATA_PROCESSOR_URL: http://data_processor:5002
-    depends_on:
-      - message_broker
-      - data_processor
-      - sensor_connector
+#   patient_bot:
+#     build:
+#       context: ./patient_bot
+#       dockerfile: Dockerfile
+#     container_name: patient_bot
+#     networks: [iot_net]
+#     environment:
+#       <<: *common-env
+#       TELEGRAM_TOKEN: ${TELEGRAM_TOKEN}   # injected from .env file
+#       SENSOR_CONNECTOR_URL: http://sensor_connector:5003
+#       DATA_PROCESSOR_URL: http://data_processor:5002
+#     depends_on:
+#       - message_broker
+#       - data_processor
+#       - sensor_connector
+#     restart: unless-stopped
+
+
+############
+version: '3.9'
+
+services:
+  mqtt-broker:
+    image: eclipse-mosquitto:latest
+    container_name: message_broker
+    ports:
+      - "1883:1883"
+    volumes:
+      - mosquitto_data:/mosquitto/data
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
     restart: unless-stopped
 
+  node-red:
+    image: nodered/node-red:latest
+    container_name: clinician-portal
+    ports:
+      - "1880:1880"
+    volumes:
+      - node_red_data:/data
+    restart: unless-stopped
 
-#############
-#version: '3.9'
+  catalog:
+    build: .
+    command: python "Catalog_Telegram(new version).py"  # Different from New version
+    container_name: catalog
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
 
-#services:
-#  mqtt-broker:
-#    image: eclipse-mosquitto:latest
-#    container_name: message_broker
-#    ports:
-#      - "1883:1883"
-#    volumes:
-#      - mosquitto_data:/mosquitto/data
-#      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf 
-#    restart: unless-stopped
-#    
-#  node-red:
-#    image: nodered/node-red:latest
-#    container_name: clinician-portal
-#    ports:
-#      - "1880:1880"
-#    volumes:
-#      - node_red_data:/data
-#    restart: unless-stopped
-#
-#  catalog:
-#    build: .
-#    command: python "Catalog_Telegram(new version).py" #Different from New version
-#    container_name: catalog
-#    ports:
-#      - "8080:8080"
-#    restart: unless-stopped
-#
-#  telegram-bot:
-#    build: .
-#    command: python patient_controll_telegram.py
-#    container_name: telegram-bot
-#    depends_on:
-#      - catalog
-#    restart: unless-stopped
-#
-#  dataprocessor:
-#    build: .
-#    command: python dataprocessor.py
-#    container_name: dataprocessor
-#    depends_on:
-#      - catalog
-#    restart: unless-stopped
-#
-#  timeseries-adaptor:
-#    build: .
-#    command: python timeseries_adaptor.py
-#    container_name: timeseries-adaptor
-#    depends_on:
-#      - catalog
-#    restart: unless-stopped
-#
-#  reminder:
-#    build: .
-#    command: python time_based_alert.py
-#    container_name: reminder
-#    depends_on:
-#      - catalog
-#    restart: unless-stopped
-#
-#  vital-sign-alert:
-#    build: .
-#    command: python vital_sign_alert.py
-#    container_name: vital-sign-alert
-#    depends_on:
-#      - catalog
-#    restart: unless-stopped
-#
-#  sensor-connector:
-#    build: .
-#    command: python sensor_connector.py
-#    container_name: sensor-connector
-#    ports:
-#      - "5003:5003"
-#    depends_on:
-#      - catalog
-#      - mqtt-broker
-#    restart: unless-stopped
-#
-#volumes:
-#  node_red_data:
-#  mosquitto_data:
-#    external: true
+  telegram-bot:
+    build: .
+    command: python patient_controll_telegram.py
+    container_name: telegram-bot
+    depends_on:
+      - catalog
+    restart: unless-stopped
+
+  dataprocessor:
+    build: .
+    command: python dataprocessor.py
+    container_name: dataprocessor
+    depends_on:
+      - catalog
+    restart: unless-stopped
+
+  thingspeak_forwarder:
+    build: .
+    command: python thingspeak_forwarder.py
+    container_name: thingspeak_forwarder
+    depends_on:
+      - catalog
+      - mqtt-broker
+    restart: unless-stopped
+
+  timeseries-adaptor:
+    build: .
+    command: python timeseries_adaptor.py
+    container_name: timeseries-adaptor
+    depends_on:
+      - catalog
+    restart: unless-stopped
+
+  reminder:
+    build: .
+    command: python time_based_alert.py
+    container_name: reminder
+    depends_on:
+      - catalog
+    restart: unless-stopped
+
+  vital-sign-alert:
+    build: .
+    command: python vital_sign_alert.py
+    container_name: vital-sign-alert
+    depends_on:
+      - catalog
+    restart: unless-stopped
+
+  sensor-connector:
+    build: .
+    command: python sensor_connector.py
+    container_name: sensor-connector
+    ports:
+      - "5003:5003"
+    depends_on:
+      - catalog
+      - mqtt-broker
+    restart: unless-stopped
+
+volumes:
+  node_red_data:
+  mosquitto_data:
+    external: true

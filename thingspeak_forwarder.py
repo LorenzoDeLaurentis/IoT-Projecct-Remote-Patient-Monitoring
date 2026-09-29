@@ -23,6 +23,7 @@ stored in the Health Catalog under /patients/<id>/thingspeak.
 
 import json
 import logging
+import os
 import threading
 import time
 from datetime import datetime, timezone
@@ -39,10 +40,10 @@ logging.basicConfig(
 log = logging.getLogger(__name__)
 
 # ─── Configuration ────────────────────────────────────────────────────────────
-HEALTH_CATALOG_URL  = "http://health_catalog:5000"
+HEALTH_CATALOG_URL  = os.getenv("HEALTH_CATALOG_URL", "http://health_catalog:5000")
 THINGSPEAK_API_URL  = "https://api.thingspeak.com/update.json"
-REST_PORT           = 5004
-WRITE_INTERVAL_SEC  = 15   # ThingSpeak free-tier minimum interval
+REST_PORT           = int(os.getenv("REST_PORT", "5004"))
+WRITE_INTERVAL_SEC  = int(os.getenv("THINGSPEAK_WRITE_INTERVAL", "15"))
 QUEUE_POLL_INTERVAL = 1    # How often the sender thread checks the queue (s)
 
 # Field mapping: metric name → ThingSpeak field number
@@ -414,9 +415,9 @@ def main():
 
     log.info("ThingSpeak Forwarder starting …")
     cfg = fetch_catalog_config()
-    mqtt_config  = cfg.get("mqtt", {})
-    broker_host  = mqtt_config.get("broker_host", "message_broker")
-    broker_port  = int(mqtt_config.get("broker_port", 1883))
+    mqtt_config = cfg.get("mqtt", {})
+    broker_host = os.getenv("MQTT_BROKER_HOST", mqtt_config.get("broker_host", "message_broker"))
+    broker_port = int(os.getenv("MQTT_BROKER_PORT", mqtt_config.get("broker_port", 1883)))
 
     mqtt_client = setup_mqtt(broker_host, broker_port)
 
