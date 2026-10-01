@@ -1,0 +1,400 @@
+[
+  {
+    "id": "tab_thingspeak",
+    "type": "tab",
+    "label": "ThingSpeak Integration",
+    "disabled": false,
+    "info": "Receives confirmed ThingSpeak writes from the forwarder and displays live readings. Also provides a manual flush button per patient."
+  },
+
+  {
+    "id": "tab_live",
+    "type": "tab",
+    "label": "Live Patient Data",
+    "disabled": false,
+    "info": "Displays live sensor readings as they arrive from the ThingSpeak Forwarder."
+  },
+
+  {
+    "id": "tab_alerts",
+    "type": "tab",
+    "label": "Alerts",
+    "disabled": false,
+    "info": "Receives anomaly alerts forwarded from ThingSpeak writes."
+  },
+
+  {
+    "id": "tab_admin",
+    "type": "tab",
+    "label": "Admin",
+    "disabled": false,
+    "info": "Manual controls: force-flush a patient's queued ThingSpeak reading."
+  },
+
+  {
+    "id": "comment_thingspeak",
+    "type": "comment",
+    "z": "tab_thingspeak",
+    "name": "ThingSpeak Forwarder → Node-RED",
+    "info": "The ThingSpeak Forwarder POSTs to /thingspeak/update after every confirmed cloud write.\nThis flow receives that push, routes by patient, and updates the dashboard.",
+    "x": 160,
+    "y": 40,
+    "wires": []
+  },
+
+  {
+    "id": "http_in_thingspeak",
+    "type": "http in",
+    "z": "tab_thingspeak",
+    "name": "POST /thingspeak/update",
+    "url": "/thingspeak/update",
+    "method": "post",
+    "upload": false,
+    "swaggerDoc": "",
+    "x": 160,
+    "y": 120,
+    "wires": [["fn_validate_ts", "http_resp_ts"]]
+  },
+
+  {
+    "id": "http_resp_ts",
+    "type": "http response",
+    "z": "tab_thingspeak",
+    "name": "200 OK",
+    "statusCode": "200",
+    "headers": {},
+    "x": 420,
+    "y": 60,
+    "wires": []
+  },
+
+  {
+    "id": "fn_validate_ts",
+    "type": "function",
+    "z": "tab_thingspeak",
+    "name": "Validate & enrich payload",
+    "func": "// Validate that we received the expected fields\nvar body = msg.payload;\nif (!body || !body.patient_id) {\n    node.warn('Missing patient_id in ThingSpeak update payload');\n    return null;\n}\n\n// Build a clean message for downstream nodes\nmsg.patient_id = body.patient_id;\nmsg.entry_id   = body.entry_id;\nmsg.sent_at    = body.sent_at;\nmsg.channel_id = body.thingspeak_channel_id;\n\n// Sensor values (may be undefined if not present in the reading)\nmsg.heart_rate               = body.heart_rate;\nmsg.body_temperature         = body.body_temperature;\nmsg.blood_pressure_systolic  = body.blood_pressure_systolic;\nmsg.blood_pressure_diastolic = body.blood_pressure_diastolic;\nmsg.rolling_mean_hr          = body.rolling_mean_hr;\nmsg.z_score_hr               = body.z_score_hr;\nmsg.anomalies                = body.anomalies || [];\n\n// Convenience: build the public ThingSpeak chart URL\nif (msg.channel_id) {\n    msg.chart_url = 'https://thingspeak.com/channels/' + msg.channel_id + '/charts/1';\n}\n\n// Tag with received timestamp\nmsg.received_at = new Date().toISOString();\n\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "x": 420,
+    "y": 120,
+    "wires": [["fn_route_by_patient"]]
+  },
+
+  {
+    "id": "fn_route_by_patient",
+    "type": "function",
+    "z": "tab_thingspeak",
+    "name": "Route: anomaly vs normal",
+    "func": "// Send to alert branch if anomalies are present, always forward to dashboard\nvar hasAnomalies = msg.anomalies && msg.anomalies.length > 0;\n\nif (hasAnomalies) {\n    // Output 1: normal dashboard update\n    // Output 2: alert branch\n    return [msg, msg];\n}\nreturn [msg, null];",
+    "outputs": 2,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "x": 680,
+    "y": 120,
+    "wires": [["fn_format_dashboard"], ["fn_format_alert"]]
+  },
+
+  {
+    "id": "fn_format_dashboard",
+    "type": "function",
+    "z": "tab_thingspeak",
+    "name": "Format for dashboard",
+    "func": "// Build a human-readable summary for the debug / dashboard panel\nvar p = msg.patient_id;\nvar lines = [\n    '=== Patient: ' + p + ' ===',\n    'Entry ID   : ' + msg.entry_id,\n    'Sent at    : ' + msg.sent_at,\n];\n\nif (msg.heart_rate !== undefined)\n    lines.push('HR         : ' + msg.heart_rate + ' bpm');\nif (msg.body_temperature !== undefined)\n    lines.push('Temp       : ' + msg.body_temperature + ' °C');\nif (msg.blood_pressure_systolic !== undefined)\n    lines.push('BP         : ' + msg.blood_pressure_systolic + '/' + msg.blood_pressure_diastolic + ' mmHg');\nif (msg.rolling_mean_hr !== undefined)\n    lines.push('Mean HR    : ' + msg.rolling_mean_hr + ' (15 min)');\nif (msg.z_score_hr !== undefined)\n    lines.push('Z-score HR : ' + msg.z_score_hr);\nif (msg.chart_url)\n    lines.push('Chart      : ' + msg.chart_url);\n\nmsg.payload = lines.join('\\n');\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "x": 940,
+    "y": 80,
+    "wires": [["debug_dashboard"]]
+  },
+
+  {
+    "id": "debug_dashboard",
+    "type": "debug",
+    "z": "tab_thingspeak",
+    "name": "Live reading",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": true,
+    "complete": "payload",
+    "targetType": "msg",
+    "statusVal": "payload",
+    "statusType": "auto",
+    "x": 1160,
+    "y": 80,
+    "wires": []
+  },
+
+  {
+    "id": "fn_format_alert",
+    "type": "function",
+    "z": "tab_thingspeak",
+    "name": "Format alert",
+    "func": "var lines = ['⚠️  ALERT — Patient: ' + msg.patient_id];\nmsg.anomalies.forEach(function(a) {\n    lines.push('  Metric: ' + a.metric + '  |  z-score: ' + a.z_score + '  |  Severity: ' + (a.severity || 'unknown'));\n});\nlines.push('  HR: ' + (msg.heart_rate || 'N/A') + ' bpm');\nlines.push('  Time: ' + msg.sent_at);\nmsg.payload = lines.join('\\n');\nmsg.topic   = 'alert';\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "x": 940,
+    "y": 160,
+    "wires": [["debug_alert", "link_out_alert"]]
+  },
+
+  {
+    "id": "debug_alert",
+    "type": "debug",
+    "z": "tab_thingspeak",
+    "name": "Alert",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": true,
+    "complete": "payload",
+    "targetType": "msg",
+    "statusVal": "payload",
+    "statusType": "auto",
+    "x": 1160,
+    "y": 160,
+    "wires": []
+  },
+
+  {
+    "id": "link_out_alert",
+    "type": "link out",
+    "z": "tab_thingspeak",
+    "name": "→ Alerts tab",
+    "links": ["link_in_alert"],
+    "x": 1160,
+    "y": 200,
+    "wires": []
+  },
+
+  {
+    "id": "link_in_alert",
+    "type": "link in",
+    "z": "tab_alerts",
+    "name": "From ThingSpeak tab",
+    "links": ["link_out_alert"],
+    "x": 120,
+    "y": 120,
+    "wires": [["fn_alert_display"]]
+  },
+
+  {
+    "id": "fn_alert_display",
+    "type": "function",
+    "z": "tab_alerts",
+    "name": "Build alert record",
+    "func": "// Keep a rolling list of the last 20 alerts in flow context\nvar alerts = flow.get('alert_history') || [];\nalerts.unshift({\n    patient_id: msg.patient_id,\n    anomalies:  msg.anomalies,\n    sent_at:    msg.sent_at,\n    heart_rate: msg.heart_rate\n});\nif (alerts.length > 20) alerts.pop();\nflow.set('alert_history', alerts);\n\nmsg.payload = alerts;\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "x": 360,
+    "y": 120,
+    "wires": [["debug_alert_history"]]
+  },
+
+  {
+    "id": "debug_alert_history",
+    "type": "debug",
+    "z": "tab_alerts",
+    "name": "Alert history (last 20)",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "targetType": "msg",
+    "x": 600,
+    "y": 120,
+    "wires": []
+  },
+
+  {
+    "id": "comment_admin",
+    "type": "comment",
+    "z": "tab_admin",
+    "name": "Manual flush — force a ThingSpeak send for a patient",
+    "info": "Inject a patient_id below to immediately flush any queued reading\nto ThingSpeak, bypassing the 15-second rate limit cooldown.",
+    "x": 220,
+    "y": 40,
+    "wires": []
+  },
+
+  {
+    "id": "inject_flush_p001",
+    "type": "inject",
+    "z": "tab_admin",
+    "name": "Flush patient_001",
+    "props": [{"p": "payload"}, {"p": "topic", "vt": "str"}],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "flush",
+    "payload": "{\"patient_id\": \"patient_001\"}",
+    "payloadType": "json",
+    "x": 160,
+    "y": 120,
+    "wires": [["fn_build_flush_request"]]
+  },
+
+  {
+    "id": "inject_flush_p002",
+    "type": "inject",
+    "z": "tab_admin",
+    "name": "Flush patient_002",
+    "props": [{"p": "payload"}, {"p": "topic", "vt": "str"}],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "flush",
+    "payload": "{\"patient_id\": \"patient_002\"}",
+    "payloadType": "json",
+    "x": 160,
+    "y": 180,
+    "wires": [["fn_build_flush_request"]]
+  },
+
+  {
+    "id": "fn_build_flush_request",
+    "type": "function",
+    "z": "tab_admin",
+    "name": "Build flush HTTP request",
+    "func": "var patient_id = msg.payload.patient_id;\nif (!patient_id) {\n    node.warn('No patient_id provided for flush');\n    return null;\n}\nmsg.method  = 'POST';\nmsg.url     = 'http://thingspeak_forwarder:5004/patients/' + patient_id + '/flush';\nmsg.payload = {};\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "x": 420,
+    "y": 150,
+    "wires": [["http_flush_request"]]
+  },
+
+  {
+    "id": "http_flush_request",
+    "type": "http request",
+    "z": "tab_admin",
+    "name": "POST → ThingSpeak Forwarder /flush",
+    "method": "use",
+    "ret": "obj",
+    "paytoqs": "ignore",
+    "url": "",
+    "tls": "",
+    "persist": false,
+    "proxy": "",
+    "authType": "",
+    "x": 680,
+    "y": 150,
+    "wires": [["fn_flush_result"]]
+  },
+
+  {
+    "id": "fn_flush_result",
+    "type": "function",
+    "z": "tab_admin",
+    "name": "Display flush result",
+    "func": "var result = msg.payload;\nif (result && result.flushed) {\n    msg.payload = '✅ Flush OK — patient: ' + result.patient_id;\n} else {\n    msg.payload = '⚠️  Flush failed — ' + (result && result.reason ? result.reason : 'unknown error');\n}\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "x": 940,
+    "y": 150,
+    "wires": [["debug_flush_result"]]
+  },
+
+  {
+    "id": "debug_flush_result",
+    "type": "debug",
+    "z": "tab_admin",
+    "name": "Flush result",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": true,
+    "complete": "payload",
+    "targetType": "msg",
+    "statusVal": "payload",
+    "statusType": "auto",
+    "x": 1160,
+    "y": 150,
+    "wires": []
+  },
+
+  {
+    "id": "comment_status",
+    "type": "comment",
+    "z": "tab_admin",
+    "name": "Poll forwarder /status every 30s",
+    "info": "Periodically fetches the ThingSpeak Forwarder's operational metrics\n(queue depth, sent/error counters, last-sent timestamps) and logs them.",
+    "x": 220,
+    "y": 260,
+    "wires": []
+  },
+
+  {
+    "id": "inject_status_poll",
+    "type": "inject",
+    "z": "tab_admin",
+    "name": "Every 30s",
+    "props": [{"p": "payload"}],
+    "repeat": "30",
+    "crontab": "",
+    "once": true,
+    "onceDelay": 2,
+    "topic": "",
+    "payload": "{}",
+    "payloadType": "json",
+    "x": 160,
+    "y": 320,
+    "wires": [["http_status_request"]]
+  },
+
+  {
+    "id": "http_status_request",
+    "type": "http request",
+    "z": "tab_admin",
+    "name": "GET /status",
+    "method": "GET",
+    "ret": "obj",
+    "paytoqs": "ignore",
+    "url": "http://thingspeak_forwarder:5004/status",
+    "tls": "",
+    "persist": false,
+    "proxy": "",
+    "authType": "",
+    "x": 360,
+    "y": 320,
+    "wires": [["fn_format_status"]]
+  },
+
+  {
+    "id": "fn_format_status",
+    "type": "function",
+    "z": "tab_admin",
+    "name": "Format status",
+    "func": "var s = msg.payload;\nif (!s || !s.counters) {\n    msg.payload = 'Could not reach ThingSpeak Forwarder';\n    return msg;\n}\nvar lines = [\n    '--- ThingSpeak Forwarder Status ---',\n    'Sent   : ' + s.counters.sent,\n    'Errors : ' + s.counters.errors,\n    'Dropped: ' + s.counters.dropped,\n    'Queue  : ' + s.queue_depth + ' patient(s) pending',\n];\nif (s.pending_patients && s.pending_patients.length) {\n    lines.push('Pending: ' + s.pending_patients.join(', '));\n}\nObject.keys(s.last_sent || {}).forEach(function(pid) {\n    lines.push('Last sent [' + pid + ']: ' + s.last_sent[pid]);\n});\nmsg.payload = lines.join('\\n');\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "x": 560,
+    "y": 320,
+    "wires": [["debug_status"]]
+  },
+
+  {
+    "id": "debug_status",
+    "type": "debug",
+    "z": "tab_admin",
+    "name": "Forwarder status",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": true,
+    "complete": "payload",
+    "targetType": "msg",
+    "statusVal": "payload",
+    "statusType": "auto",
+    "x": 760,
+    "y": 320,
+    "wires": []
+  }
+]
