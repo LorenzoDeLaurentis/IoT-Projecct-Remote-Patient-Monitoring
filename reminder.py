@@ -32,7 +32,12 @@ class ReminderManager:
                 for patient in patients:
                     reminders = requests.get(f"{self.catalog_url}/get_reminders?chatID={patient['chatID']}").json()
                     for rem in reminders:
-                        if rem["time"] == current_time:
+                        # confronto gli orari normalizzati: "8:00" vale come "08:00"
+                        try:
+                            rem_time = datetime.strptime(str(rem["time"]).strip(), "%H:%M").strftime("%H:%M")
+                        except ValueError:
+                            continue
+                        if rem_time == current_time:
                             topic = f"clinician/patient/{patient['chatID']}/alert"
                             payload = {
                                 "chatID": patient["chatID"],
