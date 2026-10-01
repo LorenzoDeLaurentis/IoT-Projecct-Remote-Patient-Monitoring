@@ -79,7 +79,11 @@
                     "therapy": "No drug therapy. Reduce caffeine intake, regular sleep and light aerobic exercise.",
                     "notes": "Patient reassured. Repeat ECG if palpitations become more frequent or last longer."
                 }
-            ]
+            ],
+            "thingspeak": {
+                "channel_id": "3518229",
+                "write_api_key": "P6LUDAAOB44DBJTK"
+            }
         },
         {
             "chatID": 5673925451,

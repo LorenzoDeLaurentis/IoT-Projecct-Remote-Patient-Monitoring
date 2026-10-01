@@ -37,6 +37,7 @@ class PatientMonitoringBot:
         # ISCRIZIONE AI TOPIC:
         self.client.mySubscribe("clinician/patient/+/alert")
         self.client.mySubscribe("clinician/patient/+/appointments/confirmation")
+        self.client.mySubscribe("clinician/patient/+/appointments/rejection")
 
         MessageLoop(self.bot, {
             'chat': self.on_chat_message,
@@ -85,7 +86,26 @@ class PatientMonitoringBot:
                 self.save_alert(chatID, conferma)
                 print(f"Message sent to {chatID}")
 
-            # 2. Caso: Alert dai sensori (se previsto nel tuo sistema)
+            # 2. Caso: Rifiuto della richiesta di appuntamento da Node-RED
+            elif "appointments/rejection" in topic:
+                chatID = msg_data.get("chatID")
+                reason = msg_data.get("reason")
+                motivation = msg_data.get("motivation", "")
+
+                # la richiesta passa a "rejected": esce dai pending e dalla lista Appointments
+                body = {"target_reason": reason, "new_status": "rejected"}
+                update = requests.put(f"{self.catalog_url}/update_appointment/{chatID}", json=body)
+                if update.status_code != 200:
+                    print(f"update_appointment fallito: {update.status_code} {update.text}")
+                    return
+
+                rifiuto = f"Your doctor rejected your appointment request \"{reason}\". Reason: {motivation}"
+                self.bot.sendMessage(chatID, rifiuto)
+                # il rifiuto resta visibile anche nella sezione Alerts
+                self.save_alert(chatID, rifiuto)
+                print(f"Rejection sent to {chatID}")
+
+            # 3. Caso: Alert dai sensori (se previsto nel tuo sistema)
             elif "alert" in topic:
                 chatID = msg_data.get("chatID")
                 testo = msg_data.get("msg", "Attenzione: Alert rilevato!")
@@ -320,8 +340,9 @@ class PatientMonitoringBot:
             res = requests.get(f"{self.catalog_url}/get_appointments?chatID={chatID}")
             data = res.json()
             doctor = data.get("doctor")
-            # nasconde gli appuntamenti con data precedente a oggi
-            appointments = [a for a in data.get("appointments", []) if not self.is_past_appointment(a)]
+            # nasconde gli appuntamenti con data precedente a oggi e le richieste rifiutate dal medico
+            appointments = [a for a in data.get("appointments", [])
+                            if not self.is_past_appointment(a) and not (isinstance(a, dict) and a.get("status") == "rejected")]
             
             if not appointments:
                 text = f"No appointments found with doctor {doctor}."
@@ -383,10 +404,19 @@ class PatientMonitoringBot:
                 self.bot.sendMessage(chatID, f"Connection error: {e}")
             self.send_main_menu(chatID)
         
-        # TRENDS SETTIMANALI: (da fare)
+        # TRENDS SETTIMANALI: link al canale ThingSpeak del paziente (campo "thingspeak" nel catalog)
         elif query_data == 'stats':
-            # da fare
-            self.bot.sendMessage(chatID, "Here is your weekly trend: [ThingSpeak link]")
+            try:
+                user = requests.get(f"{self.catalog_url}/search_patient?chatID={chatID}").json()
+                channel_id = (user.get("thingspeak") or {}).get("channel_id")
+                if channel_id:
+                    buttons = [[InlineKeyboardButton(text="📈 Open ThingSpeak chart",
+                                                     url=f"https://thingspeak.com/channels/{channel_id}")]]
+                    self.bot.sendMessage(chatID, "Here is your weekly trend:", reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons))
+                else:
+                    self.bot.sendMessage(chatID, "Your ThingSpeak channel is not configured yet.")
+            except Exception as e:
+                self.bot.sendMessage(chatID, f"Connection error: {e}")
             self.send_main_menu(chatID)
         
         # ALERTS: (creare gli alert del sensore o gli alert inviati direttamente dal dottore)

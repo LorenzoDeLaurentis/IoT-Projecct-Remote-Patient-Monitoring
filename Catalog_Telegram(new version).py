@@ -503,6 +503,21 @@ class CatalogService:
                     })
             return json.dumps(patient_list)
 
+        # THINGSPEAK (thingspeak_forwarder): canale ThingSpeak del paziente -> GET /patients/<sensorID o chatID>/thingspeak
+        elif len(path) == 3 and path[0] == "patients" and path[2] == "thingspeak":
+            patient = None
+            for p in self.data["patients"]:
+                if p.get("sensorID") == path[1] or str(p.get("chatID")) == path[1]:
+                    patient = p
+                    break
+            if patient is None:
+                raise cherrypy.HTTPError(404, "Patient not found")
+
+            channel = patient.get("thingspeak") or {}
+            if not channel.get("channel_id") or not channel.get("write_api_key"):
+                raise cherrypy.HTTPError(404, "No ThingSpeak channel configured for this patient")
+            return json.dumps({"channel_id": channel["channel_id"], "write_api_key": channel["write_api_key"]})
+
         # VISITS (Node-RED): lista delle visite fatte di un paziente
         elif path[0] == "get_visits":
             patient = self.find_patient_by_id(params.get("chatID"))
@@ -705,6 +720,41 @@ class CatalogService:
                     self.save_database()
                     return json.dumps(v)
             raise cherrypy.HTTPError(404, "Visit not found")
+
+        # CLINICAL PROFILE (Node-RED): malattia del paziente + soglie min/max dei parametri vitali
+        # condition: letta da sensor_connector (profilo del sensore); thresholds: lette da vital_sign_alert
+        elif path[0] == "update_clinical_profile":
+            body = json.loads(cherrypy.request.body.read())
+            patient = self.find_patient_by_id(body.get("chatID"))
+            if patient is None:
+                raise cherrypy.HTTPError(404, "Patient not found")
+
+            # stesse condizioni riconosciute da Data_generator (CONDITION_PROFILES)
+            conditions = ["healthy", "tachycardia", "bradycardia", "hypertension", "hypotension",
+                          "diabetes", "hyperthyroidism", "hypothyroidism", "renal_failure"]
+            condition = body.get("condition")
+            if condition is not None and condition not in conditions:
+                raise cherrypy.HTTPError(400, f"Unknown condition '{condition}'")
+
+            new_thresholds = {}
+            for vital, limits in body.get("thresholds", {}).items():
+                if vital not in ("heart_rate", "body_temperature", "blood_pressure_systolic", "blood_pressure_diastolic"):
+                    raise cherrypy.HTTPError(400, f"Unknown vital sign '{vital}'")
+                try:
+                    low, high = float(limits["min"]), float(limits["max"])
+                except (KeyError, TypeError, ValueError):
+                    raise cherrypy.HTTPError(400, f"Missing or invalid min/max for '{vital}'")
+                if low >= high:
+                    raise cherrypy.HTTPError(400, f"min must be lower than max for '{vital}'")
+                # numeri interi salvati come interi (es. 60 e non 60.0)
+                new_thresholds[vital] = {"min": int(low) if low.is_integer() else low,
+                                         "max": int(high) if high.is_integer() else high}
+
+            if condition is not None:
+                patient["condition"] = condition
+            patient.setdefault("thresholds", {}).update(new_thresholds)
+            self.save_database()
+            return json.dumps({"condition": patient.get("condition"), "thresholds": patient["thresholds"]})
 
         elif path[0] == "update_general_info":
             change_body = cherrypy.request.body.read()

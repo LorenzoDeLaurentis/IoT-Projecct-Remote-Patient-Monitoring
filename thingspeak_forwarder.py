@@ -33,8 +33,11 @@ Each patient maps to its own ThingSpeak channel (channel_id + write_api_key),
 stored in the Health Catalog under /patients/<id>/thingspeak.
 """
 
+from __future__ import annotations  # needed for "dict | None" type hints on Python 3.9 (Docker image)
+
 import json
 import logging
+import os
 import threading
 import time
 from datetime import datetime, timezone
@@ -51,7 +54,7 @@ logging.basicConfig(
 log = logging.getLogger(__name__)
 
 # ─── Configuration ────────────────────────────────────────────────────────────
-HEALTH_CATALOG_URL  = "http://health_catalog:5000"
+HEALTH_CATALOG_URL  = os.getenv("HEALTH_CATALOG_URL", "http://catalog:8080")   # set in docker-compose.yml
 THINGSPEAK_API_URL  = "https://api.thingspeak.com/update.json"
 REST_PORT           = 5004
 WRITE_INTERVAL_SEC  = 15   # ThingSpeak free-tier minimum interval
