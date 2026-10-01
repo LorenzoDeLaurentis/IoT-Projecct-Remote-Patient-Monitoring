@@ -8,6 +8,18 @@ Responsibilities:
   - Queues readings during the cooldown and sends the most-recent value when
     the interval expires (no data is silently dropped — latest wins)
   - REST Provider: exposes /status for monitoring and /flush for manual trigger
+  - Node-RED Integration (two directions):
+      PUSH  — after every confirmed ThingSpeak write, POSTs the enriched
+              reading to Node-RED's HTTP-In endpoint so the Clinician Portal
+              dashboard updates in real time without polling.
+      PULL  — Node-RED can POST to /patients/<id>/flush to force an immediate
+              send for a specific patient (e.g. from a dashboard button).
+  - Telegram Integration:
+      PUSH  — after every confirmed ThingSpeak write, POSTs to the Patient
+              Bot's internal /notify endpoint so the patient receives a
+              formatted Telegram message with their latest readings.
+              Anomalies trigger a second urgent alert message on top of the
+              normal summary.
 
 ThingSpeak channel field mapping (per patient channel):
   field1 → heart_rate
@@ -23,7 +35,6 @@ stored in the Health Catalog under /patients/<id>/thingspeak.
 
 import json
 import logging
-import os
 import threading
 import time
 from datetime import datetime, timezone
@@ -40,10 +51,10 @@ logging.basicConfig(
 log = logging.getLogger(__name__)
 
 # ─── Configuration ────────────────────────────────────────────────────────────
-HEALTH_CATALOG_URL  = os.getenv("HEALTH_CATALOG_URL", "http://health_catalog:5000")
+HEALTH_CATALOG_URL  = "http://health_catalog:5000"
 THINGSPEAK_API_URL  = "https://api.thingspeak.com/update.json"
-REST_PORT           = int(os.getenv("REST_PORT", "5004"))
-WRITE_INTERVAL_SEC  = int(os.getenv("THINGSPEAK_WRITE_INTERVAL", "15"))
+REST_PORT           = 5004
+WRITE_INTERVAL_SEC  = 15   # ThingSpeak free-tier minimum interval
 QUEUE_POLL_INTERVAL = 1    # How often the sender thread checks the queue (s)
 
 # Field mapping: metric name → ThingSpeak field number
@@ -55,6 +66,17 @@ FIELD_MAP = {
     "rolling_mean_hr":           "field5",
     "z_score_hr":                "field6",
 }
+
+# Node-RED Clinician Portal — HTTP-In endpoint that receives confirmed writes.
+# Node-RED exposes this via an "http in" node at POST /thingspeak/update
+NODERED_URL = "http://clinician_portal:1880/thingspeak/update"
+
+# Telegram Bot API — the patient bot exposes a REST endpoint that the forwarder
+# POSTs to so the patient receives a message after every confirmed ThingSpeak write.
+# The patient_bot service reads TELEGRAM_TOKEN from its own env; we call its
+# internal REST API rather than hitting the Telegram cloud directly, keeping all
+# Telegram credential management in one place.
+PATIENT_BOT_URL = "http://patient_bot:5005/notify"
 
 # ─── Shared state ─────────────────────────────────────────────────────────────
 # Per-patient channel config: {patient_id: {"channel_id": str, "write_api_key": str}}
@@ -208,6 +230,13 @@ def send_to_thingspeak(patient_id: str, sensor_data: dict) -> bool:
                  patient_id, cfg.get("channel_id"), entry_id)
         with _stats_lock:
             _stats["sent"] += 1
+
+        # Notify Node-RED Clinician Portal asynchronously
+        notify_nodered(patient_id, sensor_data, entry_id)
+
+        # Notify patient via Telegram Bot asynchronously
+        notify_telegram(patient_id, sensor_data, entry_id)
+
         return True
 
     except requests.HTTPError as exc:
@@ -220,6 +249,175 @@ def send_to_thingspeak(patient_id: str, sensor_data: dict) -> bool:
     with _stats_lock:
         _stats["errors"] += 1
     return False
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# Node-RED and Telegram notifications
+# ══════════════════════════════════════════════════════════════════════════════
+
+def notify_nodered(patient_id: str, sensor_data: dict, entry_id: int) -> None:
+    """
+    POST a confirmed ThingSpeak write to Node-RED's HTTP-In endpoint.
+
+    This is fire-and-forget (runs in a daemon thread) so it never delays
+    the ThingSpeak write path or the MQTT sender loop.
+
+    Payload sent to Node-RED:
+    {
+        "patient_id":  "patient_001",
+        "entry_id":    42,                    # ThingSpeak entry ID
+        "sent_at":     "2025-01-01T12:00:00Z",
+        "heart_rate":  72.0,
+        "body_temperature": 36.6,
+        ...                                   # all available sensor fields
+        "anomalies":   [...],                 # forwarded if present
+        "thingspeak_channel_id": "2345678"    # so Node-RED can build a chart URL
+    }
+    """
+    cfg = fetch_patient_thingspeak_cfg(patient_id)
+    body = {
+        "patient_id":            patient_id,
+        "entry_id":              entry_id,
+        "sent_at":               datetime.now(timezone.utc).isoformat(),
+        "thingspeak_channel_id": (cfg or {}).get("channel_id"),
+    }
+
+    # Copy all known sensor metrics that are present in the payload
+    for metric in FIELD_MAP:
+        if metric in sensor_data:
+            body[metric] = sensor_data[metric]
+        elif metric in ("rolling_mean_hr", "z_score_hr"):
+            hr_stats = sensor_data.get("stats", {}).get("heart_rate")
+            if isinstance(hr_stats, dict):
+                key = "mean" if metric == "rolling_mean_hr" else "z_score"
+                val = hr_stats.get(key)
+                if val is not None:
+                    body[metric] = val
+
+    if sensor_data.get("anomalies"):
+        body["anomalies"] = sensor_data["anomalies"]
+
+    def _post():
+        try:
+            resp = requests.post(NODERED_URL, json=body, timeout=5)
+            if resp.ok:
+                log.debug("Node-RED notified for patient %s (entry_id=%s)", patient_id, entry_id)
+            else:
+                log.warning("Node-RED returned %s for patient %s", resp.status_code, patient_id)
+        except requests.Timeout:
+            log.warning("Node-RED notification timed out for patient %s", patient_id)
+        except requests.ConnectionError:
+            # Node-RED may not be up yet during startup — log at debug only
+            log.debug("Node-RED unreachable for patient %s, skipping notification", patient_id)
+        except Exception as exc:
+            log.error("Unexpected error notifying Node-RED for patient %s: %s", patient_id, exc)
+
+    threading.Thread(target=_post, daemon=True).start()
+
+
+def notify_telegram(patient_id: str, sensor_data: dict, entry_id: int) -> None:
+    """
+    POST a confirmed ThingSpeak write to the Patient Bot's internal REST endpoint
+    so the patient receives a Telegram message.
+
+    Two cases are handled differently:
+      - Normal update  → a concise summary message with the latest readings
+                         and a link to the ThingSpeak channel chart.
+      - Anomaly alert  → an urgent message listing every anomalous metric
+                         with its z-score and severity, sent regardless of
+                         whether a normal update was also sent.
+
+    This is fire-and-forget (daemon thread) so it never blocks the sender loop.
+
+    The Patient Bot exposes POST /notify with body:
+    {
+        "patient_id":  "patient_001",
+        "entry_id":    42,
+        "sent_at":     "2025-01-01T12:00:00Z",
+        "message":     "...",          # pre-formatted text for Telegram
+        "is_alert":    false,          # true for anomaly notifications
+        "anomalies":   [...]           # populated only when is_alert=true
+    }
+    """
+    cfg = fetch_patient_thingspeak_cfg(patient_id)
+    channel_id = (cfg or {}).get("channel_id")
+    sent_at = datetime.now(timezone.utc).strftime("%H:%M:%S UTC")
+
+    # ── Build the message text ────────────────────────────────────────────────
+    lines = [f"📊 *Health Update — {patient_id}*", f"_Recorded at {sent_at}_", ""]
+
+    hr   = sensor_data.get("heart_rate")
+    temp = sensor_data.get("body_temperature")
+    sys_ = sensor_data.get("blood_pressure_systolic")
+    dia  = sensor_data.get("blood_pressure_diastolic")
+    mean = sensor_data.get("rolling_mean_hr")
+    zsc  = sensor_data.get("z_score_hr")
+
+    # Fall back to nested stats if top-level values are absent
+    if mean is None or zsc is None:
+        hr_stats = sensor_data.get("stats", {}).get("heart_rate")
+        if isinstance(hr_stats, dict):
+            mean = mean if mean is not None else hr_stats.get("mean")
+            zsc  = zsc  if zsc  is not None else hr_stats.get("z_score")
+
+    if hr   is not None: lines.append(f"❤️  Heart Rate:    *{hr} bpm*")
+    if temp is not None: lines.append(f"🌡️  Temperature:   *{temp} °C*")
+    if sys_ is not None: lines.append(f"🩺  Blood Pressure: *{sys_}/{dia} mmHg*")
+    if mean is not None: lines.append(f"📈  15-min Mean HR: *{mean} bpm*")
+    if zsc  is not None: lines.append(f"📐  HR Z-score:     *{zsc}*")
+
+    if channel_id:
+        lines.append("")
+        lines.append(f"🔗 [View charts](https://thingspeak.com/channels/{channel_id})")
+
+    is_alert = bool(sensor_data.get("anomalies"))
+    anomalies = sensor_data.get("anomalies", [])
+
+    if is_alert:
+        alert_lines = [f"🚨 *ALERT — {patient_id}*", ""]
+        for a in anomalies:
+            sev   = (a.get("severity") or "unknown").upper()
+            emoji = "🔴" if sev == "HIGH" else "🟡"
+            alert_lines.append(
+                f"{emoji} *{a.get('metric')}* — value: {a.get('value')}, "
+                f"z-score: {a.get('z_score')} ({sev})"
+            )
+        alert_lines.append("")
+        alert_lines.append("Please check the Clinician Portal immediately.")
+        alert_message = "\n".join(alert_lines)
+    else:
+        alert_message = None
+
+    normal_message = "\n".join(lines)
+
+    def _post_message(message: str, is_alrt: bool):
+        body = {
+            "patient_id": patient_id,
+            "entry_id":   entry_id,
+            "sent_at":    datetime.now(timezone.utc).isoformat(),
+            "message":    message,
+            "is_alert":   is_alrt,
+            "anomalies":  anomalies if is_alrt else [],
+        }
+        try:
+            resp = requests.post(PATIENT_BOT_URL, json=body, timeout=5)
+            if resp.ok:
+                log.debug("Telegram notified for patient %s (alert=%s)", patient_id, is_alrt)
+            else:
+                log.warning("Patient bot returned %s for patient %s", resp.status_code, patient_id)
+        except requests.Timeout:
+            log.warning("Telegram notification timed out for patient %s", patient_id)
+        except requests.ConnectionError:
+            log.debug("Patient bot unreachable for patient %s, skipping", patient_id)
+        except Exception as exc:
+            log.error("Unexpected error notifying Telegram for patient %s: %s", patient_id, exc)
+
+    # Always send the normal summary
+    threading.Thread(target=_post_message, args=(normal_message, False), daemon=True).start()
+
+    # Additionally send an urgent alert message if anomalies are present
+    if is_alert and alert_message:
+        threading.Thread(target=_post_message, args=(alert_message, True), daemon=True).start()
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -415,9 +613,9 @@ def main():
 
     log.info("ThingSpeak Forwarder starting …")
     cfg = fetch_catalog_config()
-    mqtt_config = cfg.get("mqtt", {})
-    broker_host = os.getenv("MQTT_BROKER_HOST", mqtt_config.get("broker_host", "message_broker"))
-    broker_port = int(os.getenv("MQTT_BROKER_PORT", mqtt_config.get("broker_port", 1883)))
+    mqtt_config  = cfg.get("mqtt", {})
+    broker_host  = mqtt_config.get("broker_host", "message_broker")
+    broker_port  = int(mqtt_config.get("broker_port", 1883))
 
     mqtt_client = setup_mqtt(broker_host, broker_port)
 
