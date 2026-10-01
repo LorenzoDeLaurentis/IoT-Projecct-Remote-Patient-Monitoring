@@ -360,11 +360,11 @@ def notify_telegram(patient_id: str, sensor_data: dict, entry_id: int) -> None:
             mean = mean if mean is not None else hr_stats.get("mean")
             zsc  = zsc  if zsc  is not None else hr_stats.get("z_score")
 
-    if hr   is not None: lines.append(f"❤️  Heart Rate:    *{hr} bpm*")
-    if temp is not None: lines.append(f"🌡️  Temperature:   *{temp} °C*")
-    if sys_ is not None: lines.append(f"🩺  Blood Pressure: *{sys_}/{dia} mmHg*")
-    if mean is not None: lines.append(f"📈  15-min Mean HR: *{mean} bpm*")
-    if zsc  is not None: lines.append(f"📐  HR Z-score:     *{zsc}*")
+    if hr   is not None: lines.append(f"  Heart Rate:    *{hr} bpm*")
+    if temp is not None: lines.append(f"  Temperature:   *{temp} °C*")
+    if sys_ is not None: lines.append(f"  Blood Pressure: *{sys_}/{dia} mmHg*")
+    if mean is not None: lines.append(f"  15-min Mean HR: *{mean} bpm*")
+    if zsc  is not None: lines.append(f"  HR Z-score:     *{zsc}*")
 
     if channel_id:
         lines.append("")
@@ -374,12 +374,12 @@ def notify_telegram(patient_id: str, sensor_data: dict, entry_id: int) -> None:
     anomalies = sensor_data.get("anomalies", [])
 
     if is_alert:
-        alert_lines = [f"🚨 *ALERT — {patient_id}*", ""]
+        alert_lines = [f" *ALERT — {patient_id}*", ""]
         for a in anomalies:
             sev   = (a.get("severity") or "unknown").upper()
-            emoji = "🔴" if sev == "HIGH" else "🟡"
+            msg = "High risk" if sev == "HIGH" else "Moderate risk" if sev == "MEDIUM" else "Low risk"
             alert_lines.append(
-                f"{emoji} *{a.get('metric')}* — value: {a.get('value')}, "
+                f"{msg} *{a.get('metric')}* — value: {a.get('value')}, "
                 f"z-score: {a.get('z_score')} ({sev})"
             )
         alert_lines.append("")
