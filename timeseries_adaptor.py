@@ -111,6 +111,7 @@ def store_reading(patient_id: str, payload: dict):
     WAL mode ensures concurrent REST reads are never blocked.
     """
     ts = payload.get("timestamp", time.time())
+    ts = datetime.fromisoformat(ts).timestamp() if isinstance(ts, str) else ts
     ts_iso = datetime.fromtimestamp(ts, tz=timezone.utc).isoformat()
 
     row = {
