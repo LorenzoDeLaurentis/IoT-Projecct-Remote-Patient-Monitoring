@@ -1,3 +1,4 @@
+import hashlib
 import logging
 import math
 import os
@@ -6,6 +7,7 @@ import sys
 import numpy as np
 import time
 from datetime import datetime
+from statistics import NormalDist
 
 log = logging.getLogger("DataGenerator")
 
@@ -74,6 +76,29 @@ def simulate_blood_pressure(heart_rate, K=0.5, sys_baseline=120):
 # presentation. Set the environment variable SIMULATION_DEMO_MODE=false to use
 # realistic frequencies and durations.
 DEMO_MODE = os.getenv("SIMULATION_DEMO_MODE", "true").strip().lower() in ("1", "true", "yes")
+
+
+# Personal offsets: each patient has a stable "signature" derived from its
+# sensorID, so the same patient always gets the same baselines (across
+# restarts, machines and Python versions).
+PERSONAL_SYS_STD = 4.0     # mmHg, spread of the personal systolic offset
+PERSONAL_TEMP_STD = 0.15   # °C, spread of the personal temperature offset
+PERSONAL_Z_LIMIT = 2.0     # personal offsets are clamped to ±2 standard deviations
+
+
+def personal_offset(sensor_id: str, trait: str) -> float:
+    """
+    Return a deterministic standard-normal value (mean 0, std 1) for the given
+    sensor and trait, clamped to ±PERSONAL_Z_LIMIT.
+
+    SHA-256 is used because, unlike Python's built-in hash(), its result is the
+    same at every run and on every machine. The trait is part of the hashed
+    text so that the offsets of different vital signs are independent.
+    """
+    digest = hashlib.sha256(f"{sensor_id}:{trait}".encode("utf-8")).digest()
+    u = (int.from_bytes(digest[:8], "big") + 0.5) / 2**64   # uniform in (0, 1)
+    z = NormalDist().inv_cdf(u)                             # standard normal
+    return max(-PERSONAL_Z_LIMIT, min(PERSONAL_Z_LIMIT, z))
 
 
 # Baseline profiles: 4 "pure" single-variable conditions (useful to test one
@@ -145,7 +170,10 @@ class SimulatedSensor:
 
     The `condition` parameter selects a constant baseline profile from
     CONDITION_PROFILES that shapes the sensor's heart rate, blood pressure,
-    and temperature baselines.
+    and temperature baselines. The baselines combine the condition profile
+    with stable personal offsets derived from the sensorID (personal_offset),
+    so a patient keeps the same "signature" across restarts and condition
+    changes, while noise and episodes stay random.
 
     On top of the baseline, the sensor can randomly experience episodes from
     EPISODE_TYPES, limited to those allowed for its condition by
@@ -162,9 +190,9 @@ class SimulatedSensor:
         self.sensor_id = sensor_id
         self.condition = condition
         profile = CONDITION_PROFILES.get(condition, CONDITION_PROFILES["healthy"])
-        self.hr_baseline = profile["hr_mean"] + np.random.normal(0, profile["hr_std"])
-        self.sys_baseline = profile["sys_baseline"]
-        self.temp_offset = profile["temp_offset"]
+        self.hr_baseline = profile["hr_mean"] + personal_offset(sensor_id, "hr") * profile["hr_std"]
+        self.sys_baseline = profile["sys_baseline"] + personal_offset(sensor_id, "sys") * PERSONAL_SYS_STD
+        self.temp_offset = profile["temp_offset"] + personal_offset(sensor_id, "temp") * PERSONAL_TEMP_STD
         self.K = 0.5
         self.allowed_episodes = CONDITION_EPISODES.get(condition, DEFAULT_EPISODES)
         self.active_episode = None  # dict with "name", "tick", "duration", "amplitude" when active
