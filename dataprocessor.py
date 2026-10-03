@@ -158,6 +158,7 @@ def process_sensor_reading(patient_id: str, payload: dict):
     compute statistics, and publish them back over MQTT.
     """
     ts = payload.get("timestamp", time.time())
+    ts = datetime.fromisoformat(ts).timestamp()
     cutoff = ts - WINDOW_SECONDS
 
     with _buffers_lock:
