@@ -106,6 +106,9 @@ services:
     container_name: sensor-connector
     ports:
       - "5003:5003"
+    environment:
+      # "true" = frequent episodes for the demo; "false" = realistic frequencies
+      SIMULATION_DEMO_MODE: "true"
     depends_on:
       - catalog
       - mqtt-broker

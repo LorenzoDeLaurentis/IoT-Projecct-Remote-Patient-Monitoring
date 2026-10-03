@@ -31,7 +31,7 @@
             "birthdate": "24/08/2003",
             "doctor": "Luca Bianco",
             "sensorID": "sensor01",
-            "condition": "healthy",
+            "condition": "stress_palpitations",
             "thresholds": {
                 "heart_rate": {
                     "min": 60,
@@ -91,10 +91,10 @@
             "birthdate": "20062003",
             "doctor": "Matteo Rossi",
             "sensorID": "sensor02",
-            "condition": "healthy",
+            "condition": "bradycardia",
             "thresholds": {
                 "heart_rate": {
-                    "min": 60,
+                    "min": 40,
                     "max": 100
                 },
                 "body_temperature": {
@@ -128,7 +128,7 @@
             "birthdate": "05/12/2000",
             "doctor": "Matteo Rossi",
             "sensorID": "sensor03",
-            "condition": "healthy",
+            "condition": "anxiety_palpitations",
             "thresholds": {
                 "heart_rate": {
                     "min": 60,
