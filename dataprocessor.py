@@ -8,6 +8,7 @@ Responsibilities:
   - MQTT Publisher: publishes rolling statistics back to the broker
   - REST Provider: exposes historical trend summaries on demand
 """
+from __future__ import annotations
 
 import json
 import time

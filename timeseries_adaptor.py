@@ -9,6 +9,7 @@ Responsibilities:
   - Handles the async-to-sync bridge: MQTT writes are non-blocking;
     REST reads use standard DB queries with no race conditions.
 """
+from __future__ import annotations
 
 import json
 import logging

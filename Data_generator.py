@@ -8,6 +8,7 @@ import numpy as np
 import time
 from datetime import datetime
 from statistics import NormalDist
+from zoneinfo import ZoneInfo
 
 log = logging.getLogger("DataGenerator")
 
@@ -19,7 +20,7 @@ def simulate_temp(temp_offset=0.0):
     active episode (e.g. fever), as computed by SimulatedSensor.
     """
     # Retrieving the current time
-    now = datetime.now()
+    now = datetime.now(LOCAL_TZ)
     current_hour = now.hour + now.minute / 60.0 #convert time to decimal, like 14.5 for 14:30
     
     # Circadian model: Average 36.6°C, oscillations of 0.5°C
@@ -36,7 +37,7 @@ def simulate_temp(temp_offset=0.0):
 
 def simulate_heart_rate(temp, fever_mode=False, hr_baseline=72):
     # Simulate heart rate with a normal resting range of 60-100 bpm, with some random fluctuations
-    now = datetime.now()
+    now = datetime.now(LOCAL_TZ)
     current_hour = now.hour + now.minute / 60.0 
 
     # Mathematical formula for the HR HR = HRbaseline + HRcircadian + HRfewerimpact + HRnoise
@@ -77,6 +78,9 @@ def simulate_blood_pressure(heart_rate, K=0.5, sys_baseline=120):
 # realistic frequencies and durations.
 DEMO_MODE = os.getenv("SIMULATION_DEMO_MODE", "true").strip().lower() in ("1", "true", "yes")
 
+# All times (circadian rhythm, day/night episode windows, timestamps) use
+# Italian time, regardless of the machine's or container's system timezone.
+LOCAL_TZ = ZoneInfo("Europe/Rome")
 
 # Personal offsets: each patient has a stable "signature" derived from its
 # sensorID, so the same patient always gets the same baselines (across
@@ -200,7 +204,7 @@ class SimulatedSensor:
     def _hour_allowed(self, hours):
         if DEMO_MODE or hours is None:
             return True
-        h = datetime.now().hour
+        h = datetime.now(LOCAL_TZ).hour
         start, end = hours
         if start <= end:
             return start <= h < end
@@ -256,7 +260,7 @@ class SimulatedSensor:
 
         return {
             "sensorID": self.sensor_id,
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(LOCAL_TZ).isoformat(),
             "heart_rate": heart_rate,
             "body_temperature": temperature,
             "blood_pressure_systolic": sys,
@@ -295,7 +299,7 @@ if __name__ == "__main__":
     try:
         while True:
             r = sensor.read()
-            timestamp = datetime.now().strftime("%H:%M:%S")
+            timestamp = datetime.now(LOCAL_TZ).strftime("%H:%M:%S")
             marker = f"  <- {sensor.active_episode['name']}" if sensor.active_episode is not None else ""
             print(f"[{timestamp}] HR: {r['heart_rate']} bpm, Temp: {r['body_temperature']} °C, "
                   f"BP: {r['blood_pressure_systolic']}/{r['blood_pressure_diastolic']} mmHg{marker}")
