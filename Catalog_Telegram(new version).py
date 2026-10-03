@@ -731,7 +731,8 @@ class CatalogService:
 
             # stesse condizioni riconosciute da Data_generator (CONDITION_PROFILES)
             conditions = ["healthy", "tachycardia", "bradycardia", "hypertension", "hypotension",
-                          "diabetes", "hyperthyroidism", "hypothyroidism", "renal_failure"]
+                          "diabetes", "hyperthyroidism", "hypothyroidism", "renal_failure"] 
+                        #Da aaggiungere "stress_palpitations" e "anxiety_palpitations".
             condition = body.get("condition")
             if condition is not None and condition not in conditions:
                 raise cherrypy.HTTPError(400, f"Unknown condition '{condition}'")
