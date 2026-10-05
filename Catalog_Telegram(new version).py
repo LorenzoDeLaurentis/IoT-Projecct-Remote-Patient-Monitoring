@@ -535,8 +535,29 @@ class CatalogService:
                 })
             return json.dumps(doctors)
 
+        # THRESHOLD ALERT
+        elif len(path) != 0 and path[0] == "patient_by_sensor":
+            sensorID = params.get("sensorID")
+
+            if not sensorID:
+                raise cherrypy.HTTPError(400, "sensorID parameter required")
+
+            for patient in self.data.get("patients", []):
+                if patient.get("sensorID") == sensorID:
+                    return json.dumps(patient)
+            raise cherrypy.HTTPError(404, "Patient with that sensorID is not found")
+
+        # REMINDER ALERT
+        elif len(path) > 0 and path[0] == "patients":
+            return json.dumps(self.data.get("patients", []))
+
+
         else:
             raise cherrypy.HTTPError(400, "Bad request")
+
+
+
+
 
 
 
