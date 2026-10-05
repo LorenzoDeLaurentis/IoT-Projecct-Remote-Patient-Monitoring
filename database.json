@@ -28,7 +28,7 @@
         {
             "chatID": 1289459725,
             "name": "Diana Giulia Cheban",
-            "birthdate": "24/08/2003",
+            "birthdate": "24-08-2003",
             "doctor": "Luca Bianco",
             "sensorID": "sensor01",
             "condition": "stress_palpitations",
@@ -87,8 +87,8 @@
         },
         {
             "chatID": 5673925451,
-            "name": "matteo costamagna",
-            "birthdate": "20062003",
+            "name": "Matteo Costamagna",
+            "birthdate": "20-06-2003",
             "doctor": "Matteo Rossi",
             "sensorID": "sensor02",
             "condition": "bradycardia",
@@ -113,7 +113,7 @@
             "reminders": [],
             "appointments": [
                 {
-                    "date": "TBD",
+                    "date": "TBD", 
                     "time": "TBD",
                     "reason": "Chest tightness after exertion",
                     "status": "pending"
@@ -125,7 +125,7 @@
         {
             "chatID": 6596242418,
             "name": "Giovanni Giordano",
-            "birthdate": "05/12/2000",
+            "birthdate": "05-12-2000",
             "doctor": "Matteo Rossi",
             "sensorID": "sensor03",
             "condition": "anxiety_palpitations",
@@ -171,10 +171,10 @@
         },
         {
             "chatID": 999999999,
-            "name": "Pluto",
-            "birthdate": "yesterday",
+            "name": "Marco Moretti",
+            "birthdate": "09-10-2001",
             "doctor": "Luca Bianco",
-            "sensorID": "sensor08",
+            "sensorID": "sensor04",
             "condition": "healthy",
             "thresholds": {
                 "heart_rate": {
@@ -208,10 +208,10 @@
         },
         {
             "chatID": 1111111111,
-            "name": "Donald Duck",
-            "birthdate": "1939, LA",
+            "name": "Tommaso Maldini",
+            "birthdate": "29-11-2002",
             "doctor": "Luca Bianco",
-            "sensorID": "N/A",
+            "sensorID": "sensor05",
             "condition": "healthy",
             "thresholds": {
                 "heart_rate": {
@@ -269,10 +269,10 @@
         },
         {
             "chatID": 3366998855,
-            "name": "Pippo",
-            "birthdate": "1939",
+            "name": "Ugo Tommasi",
+            "birthdate": "08-03-2004",
             "doctor": "Matteo Rossi",
-            "sensorID": "sensor09",
+            "sensorID": "sensor06",
             "condition": "renal_failure",
             "thresholds": {
                 "heart_rate": {
