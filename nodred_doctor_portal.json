@@ -1,5 +1,12 @@
 [
     {
+        "id": "f6f2187d.f17ca8",
+        "type": "tab",
+        "label": "Flow 1",
+        "disabled": false,
+        "info": ""
+    },
+    {
         "id": "cb86edee6af0e6cc",
         "type": "tab",
         "label": "Login",
@@ -639,6 +646,16 @@
         "visible": "true",
         "disabled": "false",
         "groupType": "default"
+    },
+    {
+        "id": "3cc11d24.ff01a2",
+        "type": "comment",
+        "z": "f6f2187d.f17ca8",
+        "name": "WARNING: please check you have started this container with a volume that is mounted to /data\\n otherwise any flow changes are lost when you redeploy or upgrade the container\\n (e.g. upgrade to a more recent node-red docker image).\\n  If you are using named volumes you can ignore this warning.\\n Double click or see info side panel to learn how to start Node-RED in Docker to save your work",
+        "info": "\nTo start docker with a bind mount volume (-v option), for example:\n\n```\ndocker run -it -p 1880:1880 -v /home/user/node_red_data:/data --name mynodered nodered/node-red\n```\n\nwhere `/home/user/node_red_data` is a directory on your host machine where you want to store your flows.\n\nIf you do not do this then you can experiment and redploy flows, but if you restart or upgrade the container the flows will be disconnected and lost. \n\nThey will still exist in a hidden data volume, which can be recovered using standard docker techniques, but that is much more complex than just starting with a named volume as described above.",
+        "x": 350,
+        "y": 80,
+        "wires": []
     },
     {
         "id": "76c988de83361957",
@@ -1788,6 +1805,23 @@
         "x": 440,
         "y": 340,
         "wires": []
+    },
+    {
+        "id": "b5d7f9a1c3e60001",
+        "type": "ui-markdown",
+        "z": "a9c1e3f5b7d00001",
+        "group": "d043e104f5c87326",
+        "name": "Selected request",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "content": "**Patient:** {{msg.payload.name}}  \n**Reason:** {{msg.payload.reason}}\n",
+        "className": "",
+        "x": 350,
+        "y": 150,
+        "wires": [
+            []
+        ]
     },
     {
         "id": "d4f6b8c0e2a30010",
@@ -4942,6 +4976,16 @@
                 "label": "Renal failure",
                 "value": "renal_failure",
                 "type": "str"
+            },
+            {
+                "label": "Stress palpitations",
+                "value": "stress_palpitations",
+                "type": "str"
+            },
+            {
+                "label": "Anxiety palpitations",
+                "value": "anxiety_palpitations",
+                "type": "str"
             }
         ],
         "payload": "",
@@ -5881,20 +5925,11 @@
         "wires": []
     },
     {
-        "id": "b5d7f9a1c3e60001",
-        "type": "ui-markdown",
-        "z": "a9c1e3f5b7d00001",
-        "group": "d043e104f5c87326",
-        "name": "Selected request",
-        "order": 1,
-        "width": 0,
-        "height": 0,
-        "content": "**Patient:** {{msg.payload.name}}  \n**Reason:** {{msg.payload.reason}}\n",
-        "className": "",
-        "x": 350,
-        "y": 150,
-        "wires": [
-            []
-        ]
+        "id": "93da1ba751728315",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "@flowfuse/node-red-dashboard": "1.32.0"
+        }
     }
 ]
