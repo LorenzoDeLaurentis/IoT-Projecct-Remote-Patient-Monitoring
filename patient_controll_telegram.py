@@ -20,6 +20,9 @@ class PatientMonitoringBot:
         self.bot = telepot.Bot(self.tokenBot)
         
         self.pending_registrations = {}
+        # Tracks which appointment index a patient is in the process of cancelling
+        # {chatID: appointment_index}
+        self.pending_cancellations = {}
 
         # Comandi di testo -> callback_data dei pulsanti
         self.commands = {
@@ -38,6 +41,7 @@ class PatientMonitoringBot:
         self.client.mySubscribe("clinician/patient/+/alert")
         self.client.mySubscribe("clinician/patient/+/appointments/confirmation")
         self.client.mySubscribe("clinician/patient/+/appointments/rejection")
+        self.client.mySubscribe("clinician/patient/+/appointments/cancellation")
 
         MessageLoop(self.bot, {
             'chat': self.on_chat_message,
@@ -105,7 +109,25 @@ class PatientMonitoringBot:
                 self.save_alert(chatID, rifiuto)
                 print(f"Rejection sent to {chatID}")
 
-            # 3. Caso: Alert dai sensori (se previsto nel tuo sistema)
+            # 3. Caso: Cancellazione confermata dal dottore (Node-RED)
+            elif "appointments/cancellation" in topic:
+                chatID = msg_data.get("chatID")
+                reason = msg_data.get("reason")
+                cancelled_by = msg_data.get("cancelled_by", "doctor")
+
+                # Mark the appointment as cancelled in the catalog
+                body = {"target_reason": reason, "new_status": "cancelled"}
+                update = requests.put(f"{self.catalog_url}/update_appointment/{chatID}", json=body)
+                if update.status_code != 200:
+                    print(f"update_appointment (cancellation) fallito: {update.status_code} {update.text}")
+                    return
+
+                testo = f"Your appointment \"{reason}\" has been cancelled by your doctor."
+                self.bot.sendMessage(chatID, testo)
+                self.save_alert(chatID, testo)
+                print(f"Cancellation notification sent to {chatID}")
+
+            # 4. Caso: Alert dai sensori (se previsto nel tuo sistema)
             elif "alert" in topic:
                 chatID = msg_data.get("chatID")
                 testo = msg_data.get("msg", "Attenzione: Alert rilevato!")
@@ -169,11 +191,11 @@ class PatientMonitoringBot:
                     self.bot.sendMessage(chatID, f"Welcome {user_data.get('name', '')}")
                     self.send_main_menu(chatID)
                 else:
-                    self.bot.sendMessage(chatID, "Welcome! You are not registered. Let's get started.\nWhat's your name? (Name and Surname)")
+                    self.bot.sendMessage(chatID, "Welcome! You are not registered. Let's get started.\nWhat's your name? (name and surname)")
                     self.pending_registrations[chatID] = {"step": 1}
             except Exception as e:
                 print(f"[/start] {type(e).__name__}: {e}")   # causa reale
-                self.bot.sendMessage(chatID, f"Error connecting Catalog ({type(e).__name__}).")
+                self.bot.sendMessage(chatID, f"Error connecting to the catalog ({type(e).__name__}).")
 
         # Comandi di testo: stessa azione del pulsante corrispondente
         elif message_text in self.commands:
@@ -189,7 +211,7 @@ class PatientMonitoringBot:
             state["step"] = 2
         elif state["step"] == 2:
             state["birthdate"] = text
-            self.bot.sendMessage(chatID, "What is your doctor name? (Name and Surname)")
+            self.bot.sendMessage(chatID, "What is your doctor name? (name and surname)")
             state["step"] = 3
         elif state["step"] == 3:
             # Check: il medico deve esistere nel catalog
@@ -197,12 +219,12 @@ class PatientMonitoringBot:
                 doctors = requests.get(f"{self.catalog_url}/get_doctors").json()
             except Exception as e:
                 print(f"[get_doctors] {type(e).__name__}: {e}")
-                self.bot.sendMessage(chatID, f"Error connecting Catalog ({type(e).__name__}). Write your doctor name again:")
+                self.bot.sendMessage(chatID, f"Error connecting to the catalog ({type(e).__name__}). Write your doctor name again:")
                 return
             doctor = next((d for d in doctors if d["name"].strip().lower() == text.strip().lower()), None)
             if doctor is None:
                 names = ", ".join(d["name"] for d in doctors)
-                self.bot.sendMessage(chatID, f"Doctor not found. Available doctors: {names}\nWhat is your doctor name? (Name and Surname)")
+                self.bot.sendMessage(chatID, f"Doctor not found. Available doctors: {names}\nWhat is your doctor name? (name and surname)")
                 return
             state["doctor"] = doctor["name"]   # salvato come scritto nel catalog
             self.bot.sendMessage(chatID, "Name of your biomedical sensor (es. sensor01):")
@@ -234,7 +256,7 @@ class PatientMonitoringBot:
                     self.bot.sendMessage(chatID, "Error saving profile. Try again.")
             except Exception as e:
                 print(f"[registration] {type(e).__name__}: {e}")
-                self.bot.sendMessage(chatID, f"Error connecting Catalog ({type(e).__name__}).")
+                self.bot.sendMessage(chatID, f"Error connecting to the catalog ({type(e).__name__}).")
             
             del self.pending_registrations[chatID]
             self.send_main_menu(chatID)
@@ -269,14 +291,171 @@ class PatientMonitoringBot:
         # REMINDERS:
         elif state.get("step") == "waiting_rem_data":
             try:
-                med, t = text.split(",")
-                payload = {"chatID": chatID, "medicine_name": med.strip(), "time": t.strip()}
+                parts = [p.strip() for p in text.split(",")]
+                # l'orario può essere scritto prima o dopo la medicina ("Aspirin, 08:30" oppure "08:30, Aspirin")
+                times = [p for p in parts if self.normalize_time(p)]
+                meds = [p for p in parts if not self.normalize_time(p)]
+                if len(parts) != 2 or len(times) != 1 or len(meds) != 1:
+                    raise ValueError("format")
+                # orario sempre HH:MM (8:00 -> 08:00), se no reminder.py non lo trova
+                payload = {"chatID": chatID, "medicine_name": meds[0], "time": self.normalize_time(times[0])}
                 requests.post(f"{self.catalog_url}/add_reminder", json=payload)
                 self.bot.sendMessage(chatID, "Reminder saved!")
                 del self.pending_registrations[chatID]
             except:
                 self.bot.sendMessage(chatID, "Format error. Try again (medicine, HH:MM):")
             self.send_main_menu(chatID)
+
+    def _get_cancellable_appointments(self, chatID):
+        """
+        Returns the list of appointments that can be cancelled:
+        future appointments that are either pending or confirmed.
+        Rejected and already-cancelled ones are excluded.
+        """
+        res = requests.get(f"{self.catalog_url}/get_appointments?chatID={chatID}")
+        if res.status_code != 200:
+            return []
+        all_apps = res.json().get("appointments", [])
+        return [
+            a for a in all_apps
+            if isinstance(a, dict)
+            and not self.is_past_appointment(a)
+            and a.get("status") not in ("rejected", "cancelled")
+        ]
+
+    def show_appointments_for_cancellation(self, chatID):
+        """
+        Sends a message listing each cancellable appointment as its own
+        inline button. Tapping a button triggers 'app_cancel_<index>'.
+        """
+        apps = self._get_cancellable_appointments(chatID)
+        if not apps:
+            self.bot.sendMessage(chatID, "You have no appointments that can be cancelled.")
+            self.send_main_menu(chatID)
+            return
+
+        buttons = []
+        for i, a in enumerate(apps):
+            label = (
+                f"{a.get('date','TBD')} {a.get('time','TBD')} "
+                f"– {a.get('reason','')} ({a.get('status','')})"
+            )
+            buttons.append([InlineKeyboardButton(text=label, callback_data=f"app_cancel_{i}")])
+
+        buttons.append([InlineKeyboardButton(text="Back", callback_data="appointments")])
+        self.bot.sendMessage(
+            chatID,
+            "Tap the appointment you want to cancel:",
+            reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons)
+        )
+
+    def cancel_appointment(self, chatID, index: int):
+        """
+        Cancels a specific appointment by its position in the cancellable list.
+        Steps:
+          1. Fetch the cancellable appointments and pick the one at `index`.
+          2. Update its status to 'cancelled' in the catalog.
+          3. Publish an MQTT message so the clinician portal (Node-RED) is notified.
+          4. Save the cancellation as an alert and confirm to the patient.
+        """
+        apps = self._get_cancellable_appointments(chatID)
+
+        if index < 0 or index >= len(apps):
+            self.bot.sendMessage(chatID, "Appointment not found. It may have already been cancelled.")
+            self.send_main_menu(chatID)
+            return
+
+        appointment = apps[index]
+        reason = appointment.get("reason", "Unknown")
+        date   = appointment.get("date", "TBD")
+        time_  = appointment.get("time", "TBD")
+
+        # 1. Update catalog
+        try:
+            body = {"target_reason": reason, "new_status": "cancelled"}
+            res = requests.put(f"{self.catalog_url}/update_appointment/{chatID}", json=body)
+            if res.status_code != 200:
+                self.bot.sendMessage(chatID, "Could not cancel the appointment. Please try again.")
+                print(f"cancel_appointment catalog update failed: {res.status_code} {res.text}")
+                self.send_main_menu(chatID)
+                return
+        except Exception as e:
+            self.bot.sendMessage(chatID, f"Connection error: {e}")
+            self.send_main_menu(chatID)
+            return
+
+        # 2. Notify the doctor via MQTT so Node-RED can update the clinician portal
+        try:
+            patient_name = requests.get(
+                f"{self.catalog_url}/search_patient?chatID={chatID}"
+            ).json().get("name", "Unknown")
+
+            mqtt_payload = {
+                "chatID":        chatID,
+                "patient_name":  patient_name,
+                "reason":        reason,
+                "date":          date,
+                "time":          time_,
+                "cancelled_by":  "patient",
+            }
+            self.client.myPublish("clinician/patient/appointments/cancelled", mqtt_payload)
+            print(f"Cancellation MQTT published for patient {chatID}: {reason}")
+        except Exception as e:
+            # MQTT failure is non-fatal: catalog is already updated
+            print(f"[cancel_appointment] MQTT publish failed: {e}")
+
+        # 3. Confirm to patient and save as alert
+        confirmation = f"Appointment \"{reason}\" on {date} at {time_} has been cancelled."
+        self.bot.sendMessage(chatID, f"{confirmation}")
+        self.save_alert(chatID, confirmation)
+        self.send_main_menu(chatID)
+
+    # Lista dei reminder del paziente (GET get_reminders)
+    def _get_reminders(self, chatID):
+        res = requests.get(f"{self.catalog_url}/get_reminders?chatID={chatID}")
+        return res.json() if res.status_code == 200 else []
+
+    # Ogni reminder come pulsante: toccandolo parte 'rem_delete_<index>'
+    def show_reminders_for_deletion(self, chatID):
+        reminders = self._get_reminders(chatID)
+        if not reminders:
+            self.bot.sendMessage(chatID, "You have no reminders to delete.")
+            self.send_main_menu(chatID)
+            return
+
+        buttons = []
+        for i, r in enumerate(reminders):
+            label = f"{r.get('medicine_name', '')} at {r.get('time', '')}"
+            buttons.append([InlineKeyboardButton(text=label, callback_data=f"rem_delete_{i}")])
+        buttons.append([InlineKeyboardButton(text="Back", callback_data="reminders")])
+        self.bot.sendMessage(chatID, "Tap the reminder you want to delete:",
+                             reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons))
+
+    # Elimina un solo reminder (quello scelto, anche se ci sono medicine con lo stesso nome a orari diversi):
+    # rimando al catalog la lista senza quel reminder (PUT update_general_info)
+    def delete_reminder(self, chatID, index: int):
+        reminders = self._get_reminders(chatID)
+        if index < 0 or index >= len(reminders):
+            self.bot.sendMessage(chatID, "Reminder not found. It may have already been deleted.")
+            self.send_main_menu(chatID)
+            return
+
+        removed = reminders.pop(index)
+        try:
+            res = requests.put(f"{self.catalog_url}/update_general_info",
+                               json={"chatID": chatID, "reminders": reminders})
+            if res.status_code != 200:
+                print(f"delete_reminder fallito: {res.status_code} {res.text}")
+                self.bot.sendMessage(chatID, "Could not delete the reminder. Please try again.")
+                self.send_main_menu(chatID)
+                return
+        except Exception as e:
+            self.bot.sendMessage(chatID, f"Connection error: {e}")
+            self.send_main_menu(chatID)
+            return
+
+        self.bot.sendMessage(chatID, f"Reminder \"{removed.get('medicine_name', '')}\" at {removed.get('time', '')} has been deleted.")
+        self.send_main_menu(chatID)
 
     def send_main_menu(self, chatID):
         buttons = [
@@ -289,6 +468,13 @@ class PatientMonitoringBot:
         ]
         keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
         self.bot.sendMessage(chatID, text=f"What do you need to do?\n(In the menu you can see what each button do) ", reply_markup=keyboard)
+
+    # Orario del reminder in formato HH:MM ("8:00" -> "08:00"), None se non è un orario valido
+    def normalize_time(self, text):
+        try:
+            return datetime.strptime(text.strip(), "%H:%M").strftime("%H:%M")
+        except ValueError:
+            return None
 
     # True se la data è precedente a oggi (TBD o formati sconosciuti restano visibili)
     def is_past_appointment(self, a):
@@ -324,10 +510,10 @@ class PatientMonitoringBot:
 
                 if res.status_code == 200:
                     data = res.json()
-                    msg = (f"Latest Vital Signs:\n\n"
+                    msg = (f"Latest vital signs:\n\n"
                             f"Heart rate: {data['heart_rate']} bpm\n"
                             f"Temperature: {data['body_temperature']} °C\n"
-                            f"Blood Pressure: {data['blood_pressure_systolic']}/{data['blood_pressure_diastolic']} mmHg")
+                            f"Blood pressure: {data['blood_pressure_systolic']}/{data['blood_pressure_diastolic']} mmHg")
                     self.bot.sendMessage(chatID, msg, parse_mode='Markdown')
                 else:
                     self.bot.sendMessage(chatID, "Data not available at the moment.")
@@ -356,9 +542,10 @@ class PatientMonitoringBot:
                 text = f"Your appointments with doctor {doctor}:\n" + "\n".join(lines)
             
             buttons = [
-                    [InlineKeyboardButton(text="Book New", callback_data='app_create')],
-                    [InlineKeyboardButton(text="Delete All", callback_data='app_delete')],
-                    [InlineKeyboardButton(text="Main Menu", callback_data='main_menu')]]
+                    [InlineKeyboardButton(text="Book new",    callback_data='app_create')],
+                    [InlineKeyboardButton(text="Cancel one",  callback_data='app_cancel_select')],
+                    [InlineKeyboardButton(text="Delete all",  callback_data='app_delete')],
+                    [InlineKeyboardButton(text="Main menu",   callback_data='main_menu')]]
             self.bot.sendMessage(chatID, text, reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons))
         elif query_data == 'app_create':
             self.bot.sendMessage(chatID, "What is the reason for the appointment?")
@@ -373,7 +560,54 @@ class PatientMonitoringBot:
                     self.bot.sendMessage(chatID, "Try again.")
             except Exception as e:
                 self.bot.sendMessage(chatID, f"Connection error: {e}")
-            self.send_main_menu(chatID)  
+            self.send_main_menu(chatID)
+
+        # CANCEL A SPECIFIC APPOINTMENT:
+        elif query_data == 'app_cancel_select':
+            # Show each cancellable appointment as a tappable button
+            self.show_appointments_for_cancellation(chatID)
+
+        # NB: escludo 'app_cancel_confirm_...' (inizia anche lui con 'app_cancel_'), se no il "Yes" finiva qui
+        elif query_data.startswith('app_cancel_') and not query_data.startswith('app_cancel_confirm_'):
+            # e.g. 'app_cancel_0', 'app_cancel_1', ...
+            try:
+                index = int(query_data.split('app_cancel_')[1])
+            except (IndexError, ValueError):
+                self.bot.sendMessage(chatID, "Invalid selection. Please try again.")
+                self.send_main_menu(chatID)
+                return
+
+            # Ask for confirmation before actually cancelling
+            apps = self._get_cancellable_appointments(chatID)
+            if index < 0 or index >= len(apps):
+                self.bot.sendMessage(chatID, "Appointment not found.")
+                self.send_main_menu(chatID)
+                return
+
+            a = apps[index]
+            confirm_text = (
+                f"Are you sure you want to cancel this appointment?\n\n"
+                f"Date:   {a.get('date', 'TBD')}\n"
+                f"Time:   {a.get('time', 'TBD')}\n"
+                f"Reason: {a.get('reason', '')}\n"
+                f"Status: {a.get('status', '')}"
+            )
+            buttons = [
+                [InlineKeyboardButton(text="Yes, cancel it",  callback_data=f"app_cancel_confirm_{index}"),
+                 InlineKeyboardButton(text="No, go back",     callback_data="app_cancel_select")]
+            ]
+            self.bot.sendMessage(chatID, confirm_text,
+                                 reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons))
+
+        elif query_data.startswith('app_cancel_confirm_'):
+            # Patient confirmed — proceed with cancellation
+            try:
+                index = int(query_data.split('app_cancel_confirm_')[1])
+            except (IndexError, ValueError):
+                self.bot.sendMessage(chatID, "Invalid selection. Please try again.")
+                self.send_main_menu(chatID)
+                return
+            self.cancel_appointment(chatID, index)  
             
         # REMINDERS:   (finito)
         elif query_data == "reminders":
@@ -385,10 +619,55 @@ class PatientMonitoringBot:
             else:
                 text = "Your reminders:\n" + "\n".join([f"{r['medicine_name']} at {r['time']}" for r in reminders])
             
-            buttons = [[InlineKeyboardButton(text="Create", callback_data='rem_create'),
-                        InlineKeyboardButton(text="Delete All", callback_data='rem_delate')],
-                         [InlineKeyboardButton(text="Main Menu", callback_data='main_menu')]]
+            buttons = [[InlineKeyboardButton(text="Create", callback_data='rem_create')],
+                       [InlineKeyboardButton(text="Delete one", callback_data='rem_delete_select')],
+                       [InlineKeyboardButton(text="Delete all", callback_data='rem_delate')],
+                       [InlineKeyboardButton(text="Main menu", callback_data='main_menu')]]
             self.bot.sendMessage(chatID, text, reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons))
+
+        # DELETE ONE REMINDER: stesso schema della cancellazione degli appuntamenti
+        elif query_data == 'rem_delete_select':
+            # ogni reminder diventa un pulsante
+            self.show_reminders_for_deletion(chatID)
+
+        # NB: escludo 'rem_delete_confirm_...' (inizia anche lui con 'rem_delete_'), come per gli appuntamenti
+        elif query_data.startswith('rem_delete_') and not query_data.startswith('rem_delete_confirm_'):
+            # es. 'rem_delete_0', 'rem_delete_1', ...
+            try:
+                index = int(query_data.split('rem_delete_')[1])
+            except (IndexError, ValueError):
+                self.bot.sendMessage(chatID, "Invalid selection. Please try again.")
+                self.send_main_menu(chatID)
+                return
+
+            # prima di eliminare chiedo conferma
+            reminders = self._get_reminders(chatID)
+            if index < 0 or index >= len(reminders):
+                self.bot.sendMessage(chatID, "Reminder not found.")
+                self.send_main_menu(chatID)
+                return
+
+            r = reminders[index]
+            confirm_text = (
+                f"Are you sure you want to delete this reminder?\n\n"
+                f"Medicine: {r.get('medicine_name', '')}\n"
+                f"Time:     {r.get('time', '')}"
+            )
+            buttons = [
+                [InlineKeyboardButton(text="Yes, delete it", callback_data=f"rem_delete_confirm_{index}"),
+                 InlineKeyboardButton(text="No, go back", callback_data="rem_delete_select")]
+            ]
+            self.bot.sendMessage(chatID, confirm_text, reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons))
+
+        elif query_data.startswith('rem_delete_confirm_'):
+            # il paziente ha confermato: elimino
+            try:
+                index = int(query_data.split('rem_delete_confirm_')[1])
+            except (IndexError, ValueError):
+                self.bot.sendMessage(chatID, "Invalid selection. Please try again.")
+                self.send_main_menu(chatID)
+                return
+            self.delete_reminder(chatID, index)
         elif query_data == "rem_create":
             self.bot.sendMessage(chatID, "Enter: medicine_name, HH:MM (example: Aspirin, 08:30)")
             self.pending_registrations[chatID] = {"step": "waiting_rem_data"}            
@@ -410,7 +689,7 @@ class PatientMonitoringBot:
                 user = requests.get(f"{self.catalog_url}/search_patient?chatID={chatID}").json()
                 channel_id = (user.get("thingspeak") or {}).get("channel_id")
                 if channel_id:
-                    buttons = [[InlineKeyboardButton(text="📈 Open ThingSpeak chart",
+                    buttons = [[InlineKeyboardButton(text="Open ThingSpeak chart",
                                                      url=f"https://thingspeak.com/channels/{channel_id}")]]
                     self.bot.sendMessage(chatID, "Here is your weekly trend:", reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons))
                 else:
@@ -430,7 +709,7 @@ class PatientMonitoringBot:
             else:
                 text = "Your alerts:\n" + "\n".join([f"{a['message']} at {a['timestamp']}" for a in alerts])
             
-            buttons = [[InlineKeyboardButton(text="Main Menu", callback_data='main_menu')]]
+            buttons = [[InlineKeyboardButton(text="Main menu", callback_data='main_menu')]]
             self.bot.sendMessage(chatID, text, reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons))
 
 
@@ -447,8 +726,8 @@ class PatientMonitoringBot:
                            f"Sensor ID: {user['sensorID']}")
                     
                     buttons = [
-                        [InlineKeyboardButton(text="Edit Profile", callback_data='edit_profile')],
-                        [InlineKeyboardButton(text="Main Menu", callback_data='main_menu')]]
+                        [InlineKeyboardButton(text="Edit profile", callback_data='edit_profile')],
+                        [InlineKeyboardButton(text="Main menu", callback_data='main_menu')]]
                     
                     keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
                     self.bot.sendMessage(chatID, msg, parse_mode='Markdown', reply_markup=keyboard)
@@ -459,7 +738,7 @@ class PatientMonitoringBot:
                 self.bot.sendMessage(chatID, f"Connection error: {e}")
                 self.send_main_menu(chatID)
         elif query_data == 'edit_profile':
-            self.bot.sendMessage(chatID, "Let's update your profile. What's your name? (Name and Surname)")
+            self.bot.sendMessage(chatID, "Let's update your profile. What's your name? (name and surname)")
             self.pending_registrations[chatID] = {"step": 1}
         elif query_data == 'main_menu':
             self.send_main_menu(chatID)

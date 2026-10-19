@@ -1,12 +1,5 @@
 [
     {
-        "id": "f6f2187d.f17ca8",
-        "type": "tab",
-        "label": "Flow 1",
-        "disabled": false,
-        "info": ""
-    },
-    {
         "id": "cb86edee6af0e6cc",
         "type": "tab",
         "label": "Login",
@@ -622,7 +615,7 @@
     {
         "id": "e3a5c7e9b1d40003",
         "type": "ui-group",
-        "name": "Reject request",
+        "name": "Appointment Rejection",
         "page": "47bdd6daeaa3b2c7",
         "width": 12,
         "height": 1,
@@ -646,16 +639,6 @@
         "visible": "true",
         "disabled": "false",
         "groupType": "default"
-    },
-    {
-        "id": "3cc11d24.ff01a2",
-        "type": "comment",
-        "z": "f6f2187d.f17ca8",
-        "name": "WARNING: please check you have started this container with a volume that is mounted to /data\\n otherwise any flow changes are lost when you redeploy or upgrade the container\\n (e.g. upgrade to a more recent node-red docker image).\\n  If you are using named volumes you can ignore this warning.\\n Double click or see info side panel to learn how to start Node-RED in Docker to save your work",
-        "info": "\nTo start docker with a bind mount volume (-v option), for example:\n\n```\ndocker run -it -p 1880:1880 -v /home/user/node_red_data:/data --name mynodered nodered/node-red\n```\n\nwhere `/home/user/node_red_data` is a directory on your host machine where you want to store your flows.\n\nIf you do not do this then you can experiment and redploy flows, but if you restart or upgrade the container the flows will be disconnected and lost. \n\nThey will still exist in a hidden data volume, which can be recovered using standard docker techniques, but that is much more complex than just starting with a named volume as described above.",
-        "x": 350,
-        "y": 80,
-        "wires": []
     },
     {
         "id": "76c988de83361957",
@@ -1498,7 +1481,8 @@
         "wires": [
             [
                 "3e77c67f993067f4",
-                "b5d7f9a1c3e60001"
+                "b5d7f9a1c3e60001",
+                "c7e9a1b3d5f80004"
             ]
         ]
     },
@@ -1516,7 +1500,7 @@
         "correl": "",
         "expiry": "",
         "broker": "48c854e9895abc80",
-        "x": 620,
+        "x": 740,
         "y": 480,
         "wires": []
     },
@@ -1538,8 +1522,8 @@
         "raw": false,
         "className": "",
         "name": "Rejection notification",
-        "x": 820,
-        "y": 540,
+        "x": 960,
+        "y": 530,
         "wires": [
             []
         ]
@@ -1563,8 +1547,8 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 570,
-        "y": 540,
+        "x": 740,
+        "y": 530,
         "wires": [
             [
                 "e3a5c7e9b1d40006"
@@ -1608,8 +1592,8 @@
                 "t": "set",
                 "p": "motivation",
                 "pt": "msg",
-                "to": "payload.motivation",
-                "tot": "msg"
+                "to": "rejectDraft",
+                "tot": "flow"
             },
             {
                 "t": "set",
@@ -1640,6 +1624,15 @@
                 "tot": "msg"
             },
             {
+                "t": "change",
+                "p": "payload.motivation",
+                "pt": "msg",
+                "from": "^\\s+",
+                "fromt": "re",
+                "to": "",
+                "tot": "str"
+            },
+            {
                 "t": "set",
                 "p": "topic",
                 "pt": "msg",
@@ -1661,53 +1654,13 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 340,
+        "x": 520,
         "y": 480,
         "wires": [
             [
                 "e3a5c7e9b1d40005",
                 "e3a5c7e9b1d40007",
                 "e3a5c7e9b1d40008"
-            ]
-        ]
-    },
-    {
-        "id": "e3a5c7e9b1d4000a",
-        "type": "ui-form",
-        "z": "a9c1e3f5b7d00001",
-        "name": "Reject request",
-        "group": "e3a5c7e9b1d40003",
-        "label": "Message to the patient (reason of the rejection)",
-        "order": 1,
-        "width": 0,
-        "height": 4,
-        "options": [
-            {
-                "label": "Reason",
-                "key": "motivation",
-                "type": "multiline",
-                "required": true,
-                "rows": 4
-            }
-        ],
-        "formValue": {
-            "motivation": ""
-        },
-        "payload": "",
-        "submit": "Reject request",
-        "cancel": "clear",
-        "resetOnSubmit": true,
-        "topic": "topic",
-        "topicType": "msg",
-        "splitLayout": false,
-        "className": "",
-        "passthru": false,
-        "dropdownOptions": [],
-        "x": 120,
-        "y": 480,
-        "wires": [
-            [
-                "e3a5c7e9b1d40009"
             ]
         ]
     },
@@ -1819,6 +1772,200 @@
         "className": "",
         "x": 350,
         "y": 150,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "c7e9a1b3d5f80008",
+        "type": "comment",
+        "z": "a9c1e3f5b7d00001",
+        "name": "rifiuto: area di testo che parte da una riga sotto (con il form non si poteva), testo salvato in flow.rejectDraft",
+        "info": "",
+        "x": 455,
+        "y": 440,
+        "wires": []
+    },
+    {
+        "id": "c7e9a1b3d5f80005",
+        "type": "ui-button",
+        "z": "a9c1e3f5b7d00001",
+        "group": "e3a5c7e9b1d40003",
+        "name": "Reject request",
+        "label": "Reject request",
+        "order": 2,
+        "width": "4",
+        "height": "1",
+        "emulateClick": false,
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "className": "",
+        "icon": "",
+        "iconPosition": "left",
+        "payload": "",
+        "payloadType": "str",
+        "topic": "topic",
+        "topicType": "msg",
+        "buttonColor": "",
+        "textColor": "",
+        "iconColor": "",
+        "enableClick": true,
+        "enablePointerdown": false,
+        "pointerdownPayload": "",
+        "pointerdownPayloadType": "str",
+        "enablePointerup": false,
+        "pointerupPayload": "",
+        "pointerupPayloadType": "str",
+        "x": 120,
+        "y": 480,
+        "wires": [
+            [
+                "c7e9a1b3d5f80006"
+            ]
+        ]
+    },
+    {
+        "id": "c7e9a1b3d5f80006",
+        "type": "switch",
+        "z": "a9c1e3f5b7d00001",
+        "name": "Reason written?",
+        "property": "rejectDraft",
+        "propertyType": "flow",
+        "rules": [
+            {
+                "t": "regex",
+                "v": "\\S",
+                "vt": "str",
+                "case": false
+            },
+            {
+                "t": "else"
+            }
+        ],
+        "checkall": "false",
+        "repair": false,
+        "outputs": 2,
+        "x": 320,
+        "y": 480,
+        "wires": [
+            [
+                "e3a5c7e9b1d40009"
+            ],
+            [
+                "c7e9a1b3d5f80007"
+            ]
+        ]
+    },
+    {
+        "id": "c7e9a1b3d5f80007",
+        "type": "change",
+        "z": "a9c1e3f5b7d00001",
+        "name": "Missing reason",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "Write the reason of the rejection",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 520,
+        "y": 580,
+        "wires": [
+            [
+                "e3a5c7e9b1d40006"
+            ]
+        ]
+    },
+    {
+        "id": "c7e9a1b3d5f80004",
+        "type": "change",
+        "z": "a9c1e3f5b7d00001",
+        "name": "Empty rejection",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 120,
+        "y": 630,
+        "wires": [
+            [
+                "c7e9a1b3d5f80002",
+                "c7e9a1b3d5f80003"
+            ]
+        ]
+    },
+    {
+        "id": "c7e9a1b3d5f80002",
+        "type": "ui-text-input",
+        "z": "a9c1e3f5b7d00001",
+        "group": "e3a5c7e9b1d40003",
+        "name": "Rejection text",
+        "label": "Reason:",
+        "order": 1,
+        "width": "0",
+        "height": "0",
+        "topic": "topic",
+        "topicType": "msg",
+        "mode": "text",
+        "tooltip": "",
+        "delay": 300,
+        "passthru": false,
+        "sendOnDelay": true,
+        "sendOnBlur": true,
+        "sendOnEnter": false,
+        "className": "",
+        "clearable": false,
+        "sendOnClear": false,
+        "icon": "",
+        "iconPosition": "left",
+        "iconInnerPosition": "inside",
+        "x": 320,
+        "y": 630,
+        "wires": [
+            [
+                "c7e9a1b3d5f80003"
+            ]
+        ]
+    },
+    {
+        "id": "c7e9a1b3d5f80003",
+        "type": "change",
+        "z": "a9c1e3f5b7d00001",
+        "name": "Rejection draft",
+        "rules": [
+            {
+                "t": "set",
+                "p": "rejectDraft",
+                "pt": "flow",
+                "to": "payload",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 520,
+        "y": 630,
         "wires": [
             []
         ]
@@ -3049,7 +3196,7 @@
         "group": "f6b8d0e2a4c50003",
         "name": "Visit diagnosis",
         "label": "",
-        "order": 8,
+        "order": 5,
         "width": 0,
         "height": 3,
         "topic": "topic",
@@ -3107,7 +3254,7 @@
         "group": "f6b8d0e2a4c50003",
         "name": "Visit therapy",
         "label": "",
-        "order": 10,
+        "order": 7,
         "width": 0,
         "height": 3,
         "topic": "topic",
@@ -3165,7 +3312,7 @@
         "group": "f6b8d0e2a4c50003",
         "name": "Visit notes",
         "label": "",
-        "order": 12,
+        "order": 9,
         "width": 0,
         "height": 3,
         "topic": "topic",
@@ -3222,7 +3369,7 @@
         "z": "a9c1e3f5b7d00003",
         "group": "f6b8d0e2a4c50003",
         "name": "Label diagnosis",
-        "order": 7,
+        "order": 4,
         "width": 0,
         "height": 0,
         "content": "**Diagnosis**\n",
@@ -3239,7 +3386,7 @@
         "z": "a9c1e3f5b7d00003",
         "group": "f6b8d0e2a4c50003",
         "name": "Label therapy",
-        "order": 9,
+        "order": 6,
         "width": 0,
         "height": 0,
         "content": "**Therapy**\n",
@@ -3256,7 +3403,7 @@
         "z": "a9c1e3f5b7d00003",
         "group": "f6b8d0e2a4c50003",
         "name": "Label notes",
-        "order": 11,
+        "order": 8,
         "width": 0,
         "height": 0,
         "content": "**Notes**\n",
@@ -3700,7 +3847,7 @@
         "group": "f6b8d0e2a4c50003",
         "name": "Save visit",
         "label": "Save visit",
-        "order": 20,
+        "order": 10,
         "width": 0,
         "height": 1,
         "emulateClick": false,
@@ -5356,7 +5503,7 @@
         "group": "c1e3a5b7d9f20001",
         "name": "Save profile",
         "label": "Save profile",
-        "order": 20,
+        "order": 10,
         "width": 3,
         "height": 1,
         "emulateClick": false,
@@ -5422,7 +5569,7 @@
         "group": "e5a7c9d1f3b40003",
         "name": "Heart rate chart",
         "label": "Heart rate (bpm)",
-        "order": 3,
+        "order": 2,
         "chartType": "line",
         "category": "Heart rate",
         "categoryType": "str",
@@ -5484,7 +5631,7 @@
         "group": "e5a7c9d1f3b40003",
         "name": "Temperature chart",
         "label": "Temperature (°C)",
-        "order": 4,
+        "order": 3,
         "chartType": "line",
         "category": "Temperature",
         "categoryType": "str",
@@ -5546,7 +5693,7 @@
         "group": "e5a7c9d1f3b40003",
         "name": "Blood pressure chart",
         "label": "Blood pressure (mmHg)",
-        "order": 5,
+        "order": 4,
         "chartType": "line",
         "category": "[\"field3\",\"field4\"]",
         "categoryType": "json",
@@ -5923,13 +6070,5 @@
         "x": 180,
         "y": 40,
         "wires": []
-    },
-    {
-        "id": "93da1ba751728315",
-        "type": "global-config",
-        "env": [],
-        "modules": {
-            "@flowfuse/node-red-dashboard": "1.32.0"
-        }
     }
 ]
