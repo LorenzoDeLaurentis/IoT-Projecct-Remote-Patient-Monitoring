@@ -120,7 +120,11 @@
                 }
             ],
             "notes": "Young athlete. Athletic bradycardia (heart rate around 52 bpm), considered physiological. Yearly sports cardiology assessment with stress test.",
-            "visits": []
+            "visits": [],
+            "thingspeak": {
+                "channel_id": "3543009",
+                "write_api_key": "U4NLU4QC0PSE83OB"
+            }
         },
         {
             "chatID": 6596242418,
