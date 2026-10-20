@@ -120,11 +120,7 @@
                 }
             ],
             "notes": "Young athlete. Athletic bradycardia (heart rate around 52 bpm), considered physiological. Yearly sports cardiology assessment with stress test.",
-            "visits": [],
-            "thingspeak": {
-                "channel_id": "3543009",
-                "write_api_key": "U4NLU4QC0PSE83OB"
-            }
+            "visits": []
         },
         {
             "chatID": 6596242418,
@@ -213,7 +209,7 @@
         {
             "chatID": 1111111111,
             "name": "Tommaso Maldini",
-            "birthdate": "29-11-1942",
+            "birthdate": "29-11-2002",
             "doctor": "Luca Bianco",
             "sensorID": "sensor05",
             "condition": "healthy",
