@@ -19,7 +19,17 @@ Responsibilities:
     (run_simulation_loop) that periodically generates a reading for each
     and feeds it into update_reading(). Each simulator's condition is read
     from the Health Catalog (the "condition" field of each patient),
-    defaulting to "healthy".
+    defaulting to "healthy". Simulated sensor faults (missing value,
+    impossible spike, disconnection) are injected by a single FaultScheduler.
+  - Preprocessing: each reading (the four biometric channels with one
+    timestamp) is checked by accept_reading() before it is stored or
+    published: completeness (all values present and numeric), physical
+    plausibility (PLAUSIBLE_LIMITS, diastolic below systolic) and a jump
+    check against the last accepted reading of the sensor (MAX_JUMP),
+    skipped after MAX_CONSECUTIVE_DISCARDS discards so a real step change
+    can never lock a sensor out. Discarded readings are neither stored nor
+    published, so /sensors/<id>/latest keeps the last valid reading.
+    Statistics over time windows are left to the Data Processor.
   - MQTT Publisher: every reading that flows through update_reading()
     (currently only from the simulation loop, since the manual POST
     endpoint no longer exists) is also published to the Message Broker, on
@@ -32,13 +42,14 @@ from __future__ import annotations
 
 import json
 import logging
+import math
 import threading
 import time
 
 import cherrypy
 import requests
 
-from Data_generator import SimulatedSensor, CONDITION_PROFILES
+from Data_generator import SimulatedSensor, CONDITION_PROFILES, FaultScheduler
 from MyMQTT import MyMQTT
 
 # ─── Logging ────────────────────────────────────────────────────────────────
@@ -86,6 +97,37 @@ _simulators_lock = threading.Lock()
 _readings: dict[str, dict] = {}
 _readings_lock = threading.Lock()
 
+# ─── Preprocessing ───────────────────────────────────────────────────────────
+# Wide PHYSICAL limits (values a working sensor can never produce), not
+# clinical thresholds: abnormal but real values must always pass. The
+# diastolic upper limit is 180 because a hypertensive crisis of a
+# renal_failure patient can reach ~155-160 mmHg.
+PLAUSIBLE_LIMITS = {
+    "heart_rate": (20, 250),
+    "body_temperature": (30.0, 45.0),
+    "blood_pressure_systolic": (50, 260),
+    "blood_pressure_diastolic": (30, 180),
+}
+# Max change of each parameter vs the last accepted reading of the sensor
+MAX_JUMP = {
+    "heart_rate": 60,
+    "body_temperature": 2.0,
+    "blood_pressure_systolic": 60,
+    "blood_pressure_diastolic": 40,
+}
+# After this many consecutive discards the jump check is skipped, so the
+# sensor re-anchors on the new values
+MAX_CONSECUTIVE_DISCARDS = 3
+
+# Per-sensor preprocessing state: last accepted reading and number of
+# consecutive discarded readings. Used only by the simulation loop and
+# apply_patient_list(), always under _simulators_lock.
+_last_valid: dict[str, dict] = {}
+_discard_count: dict[str, int] = {}
+
+# Single fault timer for the whole system, used only by the simulation loop
+fault_scheduler = FaultScheduler()
+
 
 # ══════════════════════════════════════════════════════════════════════════════
 # Store (extension point)
@@ -111,6 +153,61 @@ def update_reading(sensor_id: str, payload: dict):
 
 
 # ══════════════════════════════════════════════════════════════════════════════
+# Preprocessing
+# ══════════════════════════════════════════════════════════════════════════════
+
+def _discard(sensor_id: str, reason: str) -> bool:
+    _discard_count[sensor_id] = _discard_count.get(sensor_id, 0) + 1
+    log.warning("Reading discarded for %s: %s", sensor_id, reason)
+    return False
+
+
+def accept_reading(sensor_id: str, reading: dict) -> bool:
+    """
+    Decide whether a reading can be stored and published. Checks, in order:
+      a. completeness: all four parameters present and numeric (not None,
+         not bool, not NaN);
+      b. plausibility: each value inside PLAUSIBLE_LIMITS, and diastolic
+         below systolic;
+      c. jump check: change vs the last accepted reading within MAX_JUMP.
+         Skipped after MAX_CONSECUTIVE_DISCARDS consecutive discards, so a
+         real step change or a wrong anchor can never lock the sensor out.
+    Returns True and stores the reading as the new anchor on success;
+    returns False, logs one warning and counts the discard otherwise.
+    Must be called under _simulators_lock.
+    """
+    for param in PLAUSIBLE_LIMITS:
+        value = reading.get(param)
+        if not isinstance(value, (int, float)) or isinstance(value, bool) or math.isnan(value):
+            return _discard(sensor_id, f"{param}={value} missing or not numeric")
+
+    for param, (low, high) in PLAUSIBLE_LIMITS.items():
+        if not low <= reading[param] <= high:
+            return _discard(sensor_id, f"{param}={reading[param]} outside plausible range ({low}-{high})")
+    if reading["blood_pressure_diastolic"] >= reading["blood_pressure_systolic"]:
+        return _discard(
+            sensor_id,
+            f"blood_pressure_diastolic={reading['blood_pressure_diastolic']} not below "
+            f"blood_pressure_systolic={reading['blood_pressure_systolic']}",
+        )
+
+    previous = _last_valid.get(sensor_id)
+    if previous is not None and _discard_count.get(sensor_id, 0) < MAX_CONSECUTIVE_DISCARDS:
+        for param, max_jump in MAX_JUMP.items():
+            jump = abs(reading[param] - previous[param])
+            if jump > max_jump:
+                return _discard(
+                    sensor_id,
+                    f"{param}={reading[param]} jumped by {jump:g} from last valid "
+                    f"{previous[param]} (max {max_jump})",
+                )
+
+    _last_valid[sensor_id] = reading
+    _discard_count[sensor_id] = 0
+    return True
+
+
+# ══════════════════════════════════════════════════════════════════════════════
 # Data Generator integration (simulation loop)
 # ══════════════════════════════════════════════════════════════════════════════
 
@@ -119,7 +216,8 @@ def run_simulation_loop():
     Runs forever in a background thread: every SIMULATION_INTERVAL_SECONDS,
     reads all simulators in _simulators and writes their output into the
     store via update_reading(). If there are no simulators, it just keeps
-    sleeping.
+    sleeping. Each reading first goes through the fault scheduler (simulated
+    sensor faults) and accept_reading(); discarded readings are skipped.
 
     _simulators_lock is held for the whole cycle, so a sensor removed by the
     refresh thread never publishes or stores a reading after its removal.
@@ -128,13 +226,21 @@ def run_simulation_loop():
         time.sleep(SIMULATION_INTERVAL_SECONDS)
 
         with _simulators_lock:
+            published = 0
             for sensor_id, sensor in _simulators.items():
                 reading = sensor.read()
+                reading = fault_scheduler.apply(sensor_id, reading, list(_simulators))
+                if not accept_reading(sensor_id, reading):
+                    continue
                 update_reading(sensor_id, reading)
+                published += 1
                 log.debug("Simulated reading generated for sensor %s", sensor_id)
 
             if _simulators:
-                log.info("Simulation cycle complete: %d readings generated", len(_simulators))
+                log.info(
+                    "Simulation cycle complete: %d of %d readings published",
+                    published, len(_simulators),
+                )
 
 
 def apply_patient_list(patients: dict[str, str]) -> None:
@@ -158,6 +264,8 @@ def apply_patient_list(patients: dict[str, str]) -> None:
         for sensor_id in list(_simulators):
             if sensor_id not in patients:
                 del _simulators[sensor_id]
+                _last_valid.pop(sensor_id, None)
+                _discard_count.pop(sensor_id, None)
                 with _readings_lock:
                     _readings.pop(sensor_id, None)
                 log.info("Sensor %s removed (no longer in the catalog)", sensor_id)

@@ -109,6 +109,9 @@ services:
     environment:
       # "true" = frequent episodes for the demo; "false" = realistic frequencies
       SIMULATION_DEMO_MODE: "true"
+      # Simulated sensor faults (missing value, spike, disconnection), discarded by the
+      # Sensor Connector before publishing. Enabled by default; uncomment to disable.
+      # SIMULATION_FAULTS: "false"
     depends_on:
       - catalog
       - mqtt-broker

@@ -78,6 +78,11 @@ def simulate_blood_pressure(heart_rate, K=0.5, sys_baseline=120):
 # realistic frequencies and durations.
 DEMO_MODE = os.getenv("SIMULATION_DEMO_MODE", "true").strip().lower() in ("1", "true", "yes")
 
+# Simulated sensor faults (missing value, impossible spike, disconnection),
+# injected by FaultScheduler and discarded by the Sensor Connector before
+# publishing. Set the environment variable SIMULATION_FAULTS=false to disable them.
+FAULTS_ENABLED = os.getenv("SIMULATION_FAULTS", "true").strip().lower() in ("1", "true", "yes")
+
 # All times (circadian rhythm, day/night episode windows, timestamps) use
 # Italian time, regardless of the machine's or container's system timezone.
 LOCAL_TZ = ZoneInfo("Europe/Rome")
@@ -266,6 +271,100 @@ class SimulatedSensor:
             "blood_pressure_systolic": sys,
             "blood_pressure_diastolic": dia,
         }
+
+
+# Sensor faults. Unlike episodes, these are technical errors of the sensor,
+# not clinical events, so the Sensor Connector must discard them.
+FAULT_TYPES = ("missing", "spike", "disconnection")
+FAULT_PARAMETERS = ("heart_rate", "body_temperature", "blood_pressure_systolic", "blood_pressure_diastolic")
+# Impossible values, outside the plausibility limits of the Sensor Connector
+FAULT_SPIKE_VALUES = {
+    "heart_rate": 300,
+    "body_temperature": 50.0,
+    "blood_pressure_systolic": 320,
+    "blood_pressure_diastolic": 200,
+}
+
+
+class FaultScheduler:
+    """
+    Injects simulated sensor faults into the readings of a SimulatedSensor.
+
+    A single timer is shared by the whole system (not one per sensor): when it
+    expires, one fault starts on a random active sensor (different from the
+    previous faulty one when possible), lasts 1-3 readings of that sensor and
+    the next fault is scheduled. Fault types:
+      - "missing":       one random parameter is set to None
+      - "spike":         one random parameter gets an impossible value (FAULT_SPIKE_VALUES)
+      - "disconnection": all four parameters are set to 0
+
+    DEMO_MODE controls the timing (a few minutes in demo mode, hours otherwise).
+    FAULTS_ENABLED=False disables the faults. `clock` returns the current time
+    in seconds and can be replaced in tests to fake time.
+
+    Not thread-safe: it is meant to be used only by the simulation thread of
+    the Sensor Connector.
+    """
+
+    def __init__(self, clock=time.monotonic):
+        self._clock = clock
+        self._next_fault_time = self._clock() + self._delay(first=True)
+        self._active_fault = None  # dict with "sensor_id", "type", "values", "remaining" when active
+        self._last_sensor_id = None
+
+    @staticmethod
+    def _delay(first):
+        if DEMO_MODE:
+            return random.uniform(60, 180) if first else random.uniform(180, 270)
+        return random.uniform(7200, 21600) if first else random.uniform(21600, 43200)
+
+    def _start_fault(self, active_sensor_ids):
+        candidates = [s for s in active_sensor_ids if s != self._last_sensor_id]
+        if not candidates:
+            candidates = list(active_sensor_ids)
+        sensor_id = random.choice(candidates)
+        fault_type = random.choice(FAULT_TYPES)
+        if fault_type == "disconnection":
+            values = {p: 0 for p in FAULT_PARAMETERS}
+        elif fault_type == "spike":
+            p = random.choice(FAULT_PARAMETERS)
+            values = {p: FAULT_SPIKE_VALUES[p]}
+        else:
+            values = {random.choice(FAULT_PARAMETERS): None}
+        duration = random.randint(1, 3)
+
+        self._active_fault = {"sensor_id": sensor_id, "type": fault_type, "values": values, "remaining": duration}
+        self._last_sensor_id = sensor_id
+        self._next_fault_time = self._clock() + self._delay(first=False)
+        log.warning("[SENSOR FAULT] %s: %s %s (simulated, %d reading(s))", sensor_id, fault_type,
+                    ", ".join(f"{p}={v}" for p, v in values.items()), duration)
+
+    def apply(self, sensor_id, reading, active_sensor_ids):
+        """
+        Return the reading of sensor_id, corrupted if a fault is active on that
+        sensor. The input dict is never modified: a corrupted reading is a copy.
+        active_sensor_ids lists the sensors that can be hit by a new fault.
+        """
+        if not FAULTS_ENABLED:
+            return reading
+
+        # A fault on a sensor removed in the meantime would never end
+        if self._active_fault is not None and self._active_fault["sensor_id"] not in active_sensor_ids:
+            self._active_fault = None
+
+        if self._active_fault is None and active_sensor_ids and self._clock() >= self._next_fault_time:
+            self._start_fault(active_sensor_ids)
+
+        fault = self._active_fault
+        if fault is None or fault["sensor_id"] != sensor_id:
+            return reading
+
+        corrupted = dict(reading)
+        corrupted.update(fault["values"])
+        fault["remaining"] -= 1
+        if fault["remaining"] <= 0:
+            self._active_fault = None
+        return corrupted
 
 
 if __name__ == "__main__":
