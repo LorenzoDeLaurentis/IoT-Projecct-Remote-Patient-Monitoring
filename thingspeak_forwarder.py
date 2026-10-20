@@ -95,6 +95,10 @@ _queue_lock = threading.Lock()
 _last_sent: dict[str, float] = {}
 _last_sent_lock = threading.Lock()
 
+# Per-patient latest Data Processor stats, added to the next sensor reading
+# {patient_id: {"heart_rate": {"mean": ..., "z_score": ...}, ...}}
+_latest_stats: dict[str, dict] = {}
+
 # Counters for /status endpoint
 _stats = {"sent": 0, "dropped": 0, "errors": 0, "queued": 0}
 _stats_lock = threading.Lock()
@@ -528,6 +532,16 @@ def on_message(client, userdata, msg):
         if not patient_id:
             log.warning("Cannot determine patient_id from topic %s", msg.topic)
             return
+
+        # Statistiche del Data Processor (field5/field6): non le mando da sole, se no creano righe
+        # senza parametri vitali e prendono il posto delle letture nella coda. Le salvo e le
+        # aggiungo alla prossima lettura del sensore, cosi ogni riga ha tutti e 6 i campi.
+        if msg.topic.endswith("/stats"):
+            _latest_stats[patient_id] = payload.get("stats", {})
+            return
+        if patient_id in _latest_stats:
+            payload = {**payload, "stats": _latest_stats[patient_id]}
+
         _enqueue(patient_id, payload)
     except json.JSONDecodeError as exc:
         log.error("Bad JSON on %s: %s", msg.topic, exc)

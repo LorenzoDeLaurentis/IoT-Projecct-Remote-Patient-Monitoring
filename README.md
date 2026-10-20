@@ -48,9 +48,37 @@ docker compose down
 The images copy the source code at build time (`COPY . .`), so any code change
 needs `--build` to reach the containers.
 
-The clinician portal flow is in `nodred_doctor_portal.json`; import it into
-Node-RED at http://localhost:1880. The flow reaches the catalog and the broker
+### Clinician portal setup (Node-RED, once per machine)
+
+A fresh `node_red_data` volume is empty: the portal flow and the dashboard
+package are **not** installed automatically. Do these steps once, after the
+first `docker compose up`, in this order:
+
+**1. Install Node-RED Dashboard 2.0.** The portal uses the Dashboard 2.0 nodes
+(`ui-base`, `ui-page`, `ui-form`, `ui-table`, `ui-chart`, ...), which are not part
+of the Node-RED image. Without them the editor shows unknown nodes and the log
+says `Waiting for missing types to be registered: ui-base, ...`.
+
+```bash
+docker exec clinician-portal npm install --prefix /data @flowfuse/node-red-dashboard
+docker restart clinician-portal
+```
+
+Or from the editor at http://localhost:1880: menu ☰ → *Manage palette* →
+*Install* → search `@flowfuse/node-red-dashboard` → *Install*.
+
+**2. Import the portal flow.** Open http://localhost:1880, menu ☰ → *Import* →
+*select a file to import* → choose `nodred_doctor_portal.json` → *Import*, then
+click **Deploy** (top right). The flow reaches the catalog and the broker
 through `host.docker.internal` (see the file).
+
+**3. Open the portal** at http://localhost:1880/dashboard and log in with a
+doctor account from `database.json` (`doctors` → `username` / `password`).
+
+Both the package and the imported flow are stored in the `node_red_data`
+volume, so they survive `docker compose down` / `up` (not `down -v`). The
+Node-RED image is pinned to `nodered/node-red:5.0.8` in `docker-compose.yml`
+(tested with Dashboard 2.0 v1.33.0), so everyone runs the same version.
 
 **Credentials.** `conf.json` holds the Telegram bot token, and `database.json`
 holds ThingSpeak write API keys and doctor logins. Never commit real

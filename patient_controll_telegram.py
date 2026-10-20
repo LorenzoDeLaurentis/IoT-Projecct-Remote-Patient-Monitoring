@@ -135,7 +135,9 @@ class PatientMonitoringBot:
                 if "Reminder for your medicine" in testo:
                     self.send_medicine_reminder(chatID, testo)
                 else:
-                    self.bot.sendMessage(chatID, f"ALERT: {testo}")
+                    # Disattivato per la prova: gli ALERT dei sensori non vengono mandati su Telegram (i reminder si)
+                    # self.bot.sendMessage(chatID, f"ALERT: {testo}")
+                    print(f"ALERT sensore non inviato (disattivato): {chatID} {testo}")
 
         except Exception as e:
             print(f"Errore nel processare il messaggio MQTT: {e}")
@@ -264,15 +266,17 @@ class PatientMonitoringBot:
         # APPOINTMENTS:     c'è il collegamento al dottore, che deve confermare l'appuntamento, per ora è solo registrato
         elif state.get("step") == "waiting_app_reason":
             reason = text
-            name = requests.get(f"{self.catalog_url}/search_patient?chatID={chatID}").json().get("name", "Unknown")
-            mqtt_payload = {
-                "patient_name": name,
-                "chatID": chatID,
-                "reason": reason,
-                "status": "pending"
-            }
-            
+            # tolgo subito lo stato: se qualcosa va storto il prossimo messaggio non viene preso di nuovo come motivo
+            del self.pending_registrations[chatID]
+
             try:
+                name = requests.get(f"{self.catalog_url}/search_patient?chatID={chatID}").json().get("name", "Unknown")
+                mqtt_payload = {
+                    "patient_name": name,
+                    "chatID": chatID,
+                    "reason": reason,
+                    "status": "pending"
+                }
                 self.client.myPublish("clinician/patient/appointments/request", mqtt_payload)
                 catalog_body = {**mqtt_payload, "date": "TBD", "time": "TBD"}
                 res = requests.post(f"{self.catalog_url}/add_appointment", json=catalog_body)
@@ -282,7 +286,6 @@ class PatientMonitoringBot:
                 else:
                     print(f"add_appointment fallito: {res.status_code} {res.text}")
                     self.bot.sendMessage(chatID, "Error saving appointment. Try again.")
-                del self.pending_registrations[chatID]
             except Exception as e:
                 self.bot.sendMessage(chatID, f"Error: {e}")
            
@@ -290,20 +293,29 @@ class PatientMonitoringBot:
 
         # REMINDERS:
         elif state.get("step") == "waiting_rem_data":
-            try:
-                parts = [p.strip() for p in text.split(",")]
-                # l'orario può essere scritto prima o dopo la medicina ("Aspirin, 08:30" oppure "08:30, Aspirin")
-                times = [p for p in parts if self.normalize_time(p)]
-                meds = [p for p in parts if not self.normalize_time(p)]
-                if len(parts) != 2 or len(times) != 1 or len(meds) != 1:
-                    raise ValueError("format")
-                # orario sempre HH:MM (8:00 -> 08:00), se no reminder.py non lo trova
-                payload = {"chatID": chatID, "medicine_name": meds[0], "time": self.normalize_time(times[0])}
-                requests.post(f"{self.catalog_url}/add_reminder", json=payload)
-                self.bot.sendMessage(chatID, "Reminder saved!")
-                del self.pending_registrations[chatID]
-            except:
+            parts = [p.strip() for p in text.split(",")]
+            # l'orario può essere scritto prima o dopo la medicina ("Aspirin, 08:30" oppure "08:30, Aspirin")
+            times = [p for p in parts if self.normalize_time(p)]
+            meds = [p for p in parts if not self.normalize_time(p)]
+            if len(parts) != 2 or len(times) != 1 or len(meds) != 1:
+                # formato sbagliato: resto in attesa di un nuovo tentativo
                 self.bot.sendMessage(chatID, "Format error. Try again (medicine, HH:MM):")
+                return
+
+            del self.pending_registrations[chatID]
+            # orario sempre HH:MM (8:00 -> 08:00), se no reminder.py non lo trova
+            payload = {"chatID": chatID, "medicine_name": meds[0], "time": self.normalize_time(times[0])}
+            try:
+                res = requests.post(f"{self.catalog_url}/add_reminder", json=payload)
+                # prima diceva sempre "Reminder saved!" anche se il catalog dava errore
+                if res.status_code == 200:
+                    self.bot.sendMessage(chatID, "Reminder saved!")
+                else:
+                    print(f"add_reminder fallito: {res.status_code} {res.text}")
+                    self.bot.sendMessage(chatID, "Error saving reminder. Try again.")
+            except Exception as e:
+                print(f"[add_reminder] {type(e).__name__}: {e}")
+                self.bot.sendMessage(chatID, f"Error connecting to the catalog ({type(e).__name__}).")
             self.send_main_menu(chatID)
 
     def _get_cancellable_appointments(self, chatID):
@@ -500,6 +512,17 @@ class PatientMonitoringBot:
 
     # Azioni comuni a pulsanti e comandi di testo
     def manage_action(self, chatID, query_data):
+        # Se il paziente non e' registrato il catalog risponde 404: invece di andare in errore chiedo di registrarsi
+        try:
+            check = requests.get(f"{self.catalog_url}/search_patient?chatID={chatID}")
+        except Exception as e:
+            print(f"[manage_action] {type(e).__name__}: {e}")
+            self.bot.sendMessage(chatID, f"Error connecting to the catalog ({type(e).__name__}).")
+            return
+        if check.status_code != 200:
+            self.bot.sendMessage(chatID, "You are not registered yet. Send /start to register.")
+            return
+
         # VITALS:      (collegato al sensor_connector)
         if query_data == 'vitals':
             try:
@@ -730,7 +753,8 @@ class PatientMonitoringBot:
                         [InlineKeyboardButton(text="Main menu", callback_data='main_menu')]]
                     
                     keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
-                    self.bot.sendMessage(chatID, msg, parse_mode='Markdown', reply_markup=keyboard)
+                    # senza parse_mode='Markdown': un "_" nel nome o nel sensorID (es. sensor_01) faceva fallire il messaggio
+                    self.bot.sendMessage(chatID, msg, reply_markup=keyboard)
                 else:
                     self.bot.sendMessage(chatID, "Profile not found. Please register again.")
                     self.send_main_menu(chatID)

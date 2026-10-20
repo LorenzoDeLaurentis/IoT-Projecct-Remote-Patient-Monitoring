@@ -28,7 +28,7 @@ services:
     restart: unless-stopped
 
   node-red:
-    image: nodered/node-red:latest
+    image: nodered/node-red:5.0.8   # versione fissata: il portale usa Dashboard 2.0 (vedi README)
     container_name: clinician-portal
     ports:
       - "1880:1880"

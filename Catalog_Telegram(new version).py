@@ -42,6 +42,7 @@ except ModuleNotFoundError:  # pragma: no cover - fallback for environments with
 
 import json
 import logging
+import requests
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
@@ -142,7 +143,76 @@ class CatalogService:
             "blood_pressure_systolic": {"min": 90, "max": 140},
             "blood_pressure_diastolic": {"min": 60, "max": 90}
         }
-    
+
+
+    # THINGSPEAK: crea un canale privato per il paziente sull'account ThingSpeak del suo dottore
+    # Restituisce {"channel_id", "write_api_key", "read_api_key"} oppure None se il canale non si puo creare
+    def create_thingspeak_channel(self, doctor_name, sensor_id):
+        if not sensor_id or sensor_id == "N/A":
+            log.warning("ThingSpeak: no sensorID, channel not created")
+            return None
+
+        # Cerca il dottore per nome (nel paziente viene salvato il nome del dottore)
+        doctor = None
+        for d in self.data.get("doctors", []):
+            if str(d.get("name", "")).lower() == str(doctor_name).lower():
+                doctor = d
+                break
+        if doctor is None:
+            log.warning("ThingSpeak: doctor %s not found, channel not created", doctor_name)
+            return None
+
+        thingspeak = doctor.get("thingspeak") or {}
+        user_api_key = thingspeak.get("user_api_key")
+        if not user_api_key:
+            log.warning("ThingSpeak: doctor %s has no user_api_key, channel not created", doctor_name)
+            return None
+
+        #usiamo 4 canali perchè è la versione gratuita di ThinkSpeaks. Nel caso verrà comprata la versione estesa, si toglie questo controllo
+        if len(thingspeak.get("channels", [])) >= 4:
+            log.warning("ThingSpeak: doctor %s already has 4 channels, channel not created", doctor_name)
+            return None
+
+        # 4 parametri vitali + media e z-score del battito (dal Data Processor), nome = sensorID
+        # Canale pubblico: cosi il paziente (link dal bot) e il dottore (Node-RED) vedono i grafici senza chiave
+        try:
+            resp = requests.post("https://api.thingspeak.com/channels.json", data={
+                "api_key": user_api_key,
+                "name": sensor_id,
+                "field1": "Heart rate (bpm)",
+                "field2": "Body temperature (C)",
+                "field3": "Systolic BP (mmHg)",
+                "field4": "Diastolic BP (mmHg)",
+                "field5": "Rolling mean HR (bpm)",
+                "field6": "HR z-score",
+                "public_flag": "true"
+            }, timeout=10)
+            resp.raise_for_status()
+            channel = resp.json()
+        except Exception as e:
+            log.error("ThingSpeak: error creating channel for %s: %s", sensor_id, e)
+            return None
+
+        # ThingSpeak restituisce due chiavi: quella con write_flag true e' la write key, l'altra la read key
+        write_api_key = None
+        read_api_key = None
+        for key in channel.get("api_keys", []):
+            if key.get("write_flag"):
+                write_api_key = key.get("api_key")
+            else:
+                read_api_key = key.get("api_key")
+
+        # Aggiunge il canale alla lista del dottore
+        thingspeak.setdefault("channels", []).append(str(channel["id"]))
+        doctor["thingspeak"] = thingspeak
+
+        log.info("ThingSpeak: channel %s created for %s (doctor %s)", channel["id"], sensor_id, doctor_name)
+        return {
+            "channel_id": str(channel["id"]),
+            "write_api_key": write_api_key,
+            "read_api_key": read_api_key
+        }
+
 
     # NEW
     '''
@@ -601,24 +671,17 @@ class CatalogService:
                 "appointments": []
             }
 
+            # THINGSPEAK: canale del paziente creato sull'account del dottore (se non si puo, il paziente viene registrato lo stesso)
+            channel = self.create_thingspeak_channel(doctor, sensor_id)
+            if channel:
+                new_patient["thingspeak"] = channel
+
             self.data["patients"].append(new_patient)
             self.save_database()
 
             return "patient added"
             
 
-            
-            
-
-
-
-            '''
-            # Aggiunge il paziente alla lista e salva su file
-            self.data["patients"].append(new_patient)
-            with open(self.database_file, "w") as f:
-                json.dump(self.data, f, indent=4)
-            return "OK"
-            '''
         
         # REMINDERS: #TO DO: if i don't write time write N/A
         elif path[0] == "add_reminder":

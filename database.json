@@ -15,13 +15,27 @@
             "doctorID": "doc001",
             "name": "Luca Bianco",
             "username": "luca.bianco",
-            "password": "luca"
+            "password": "luca",
+            "thingspeak": {
+                "account_id": "mwa0000038888119",
+                "user_api_key": "ZBM4IM7LRT0J6OTF",
+                "channels": [
+                    "3518229"
+                ]
+            }
         },
         {
             "doctorID": "doc002",
             "name": "Matteo Rossi",
             "username": "matteo.rossi",
-            "password": "matteo"
+            "password": "matteo",
+            "thingspeak": {
+                "account_id": "mwa0000040090471",
+                "user_api_key": "",
+                "channels": [
+                    "3543009"
+                ]
+            }
         }
     ],
     "patients": [
@@ -113,7 +127,7 @@
             "reminders": [],
             "appointments": [
                 {
-                    "date": "TBD", 
+                    "date": "TBD",
                     "time": "TBD",
                     "reason": "Chest tightness after exertion",
                     "status": "pending"
