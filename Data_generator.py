@@ -23,10 +23,10 @@ def simulate_temp(temp_offset=0.0):
     now = datetime.now(LOCAL_TZ)
     current_hour = now.hour + now.minute / 60.0 #convert time to decimal, like 14.5 for 14:30
     
-    # Circadian model: Average 36.6°C, oscillations of 0.5°C
+    # Circadian model: Average 36.6°C, oscillations of 0.3°C
     # The temperature peaks around 18:00 and is lowest around 6:00 
     #sin has a period of 2pi, diving by 12 gives us a 24-hour cycle, -12 used to shift the peak to 18:00 instead of 12:00
-    base_temp = 36.6 + 0.5 * np.sin((current_hour - 12) * np.pi / 12)
+    base_temp = 36.6 + 0.3 * np.sin((current_hour - 12) * np.pi / 12)
 
     # Adding some Gaussian Noise, due to the sensor - mean 0, standard deviation 0.05)
     noise = np.random.normal(0, 0.05)
@@ -85,9 +85,9 @@ LOCAL_TZ = ZoneInfo("Europe/Rome")
 # Personal offsets: each patient has a stable "signature" derived from its
 # sensorID, so the same patient always gets the same baselines (across
 # restarts, machines and Python versions).
-PERSONAL_SYS_STD = 4.0     # mmHg, spread of the personal systolic offset
-PERSONAL_TEMP_STD = 0.15   # °C, spread of the personal temperature offset
-PERSONAL_Z_LIMIT = 2.0     # personal offsets are clamped to ±2 standard deviations
+PERSONAL_SYS_STD = 3.0     # mmHg, spread of the personal systolic offset
+PERSONAL_TEMP_STD = 0.10   # °C, spread of the personal temperature offset
+PERSONAL_Z_LIMIT = 1.5     # personal offsets are clamped to ±1.5 standard deviations
 
 
 def personal_offset(sensor_id: str, trait: str) -> float:
@@ -113,7 +113,7 @@ def personal_offset(sensor_id: str, trait: str) -> float:
 # "stress_palpitations" and "anxiety_palpitations" have a normal baseline and
 # differ from "healthy" only in the episodes they can experience (see CONDITION_EPISODES).
 CONDITION_PROFILES = {
-    "healthy":              {"hr_mean": 72,  "hr_std": 3, "sys_baseline": 120, "temp_offset": 0.0},
+    "healthy":              {"hr_mean": 72,  "hr_std": 2.5, "sys_baseline": 120, "temp_offset": 0.0},
     "tachycardia":          {"hr_mean": 95,  "hr_std": 5, "sys_baseline": 120, "temp_offset": 0.0},
     "bradycardia":          {"hr_mean": 50,  "hr_std": 3, "sys_baseline": 120, "temp_offset": 0.0},
     "hypertension":         {"hr_mean": 72,  "hr_std": 3, "sys_baseline": 150, "temp_offset": 0.0},
@@ -122,8 +122,8 @@ CONDITION_PROFILES = {
     "hypothyroidism":       {"hr_mean": 52,  "hr_std": 3, "sys_baseline": 120, "temp_offset": -0.5},
     "diabetes":             {"hr_mean": 85,  "hr_std": 4, "sys_baseline": 145, "temp_offset": 0.0},
     "renal_failure":        {"hr_mean": 90,  "hr_std": 4, "sys_baseline": 155, "temp_offset": 0.0},
-    "stress_palpitations":  {"hr_mean": 72,  "hr_std": 3, "sys_baseline": 120, "temp_offset": 0.0},
-    "anxiety_palpitations": {"hr_mean": 72,  "hr_std": 3, "sys_baseline": 120, "temp_offset": 0.0},
+    "stress_palpitations":  {"hr_mean": 72,  "hr_std": 2.5, "sys_baseline": 120, "temp_offset": 0.0},
+    "anxiety_palpitations": {"hr_mean": 72,  "hr_std": 2.5, "sys_baseline": 120, "temp_offset": 0.0},
 }
 
 # Episode types. Deltas are the PEAK change applied on top of the patient's

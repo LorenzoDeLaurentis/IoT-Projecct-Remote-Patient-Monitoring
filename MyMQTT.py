@@ -15,6 +15,8 @@ class MyMQTT:
         self.notifier = notifier
         self.clientID = clientID
         self._topic = ""
+        # all subscribed topics, re-subscribed after every (re)connection
+        self._topics = []
         self._isSubscriber = False
         # create an instance of paho.mqtt.client
         try:
@@ -27,6 +29,11 @@ class MyMQTT:
 
     def myOnConnect(self, paho_mqtt, userdata, flags, rc):
         print("Connected to %s with result code: %d" % (self.broker, rc))
+        if rc == 0:
+            # clean_session=True: the broker forgets our subscriptions when the
+            # connection drops, so restore them after every (re)connection
+            for topic in self._topics:
+                paho_mqtt.subscribe(topic, 2)
 
     def myOnMessageReceived(self, paho_mqtt, userdata, msg):
         # A new message is received
@@ -44,6 +51,8 @@ class MyMQTT:
         # just to remember that it works also as a subscriber
         self._isSubscriber = True
         self._topic = topic
+        if topic not in self._topics:
+            self._topics.append(topic)
         print("subscribed to %s" % (topic))
 
     def start(self):
@@ -54,12 +63,12 @@ class MyMQTT:
     def unsubscribe(self):
         if (self._isSubscriber):
             # remember to unsuscribe if it is working also as subscriber
-            self._paho_mqtt.unsubscribe(self._topic)
+            for topic in self._topics:
+                self._paho_mqtt.unsubscribe(topic)
+            self._topics = []
 
     def stop(self):
-        if (self._isSubscriber):
-            # remember to unsuscribe if it is working also as subscriber
-            self._paho_mqtt.unsubscribe(self._topic)
+        self.unsubscribe()
 
         self._paho_mqtt.loop_stop()
         self._paho_mqtt.disconnect()
