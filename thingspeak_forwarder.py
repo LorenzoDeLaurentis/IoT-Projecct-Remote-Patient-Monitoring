@@ -54,7 +54,7 @@ logging.basicConfig(
 log = logging.getLogger(__name__)
 
 # ─── Configuration ────────────────────────────────────────────────────────────
-HEALTH_CATALOG_URL  = os.getenv("HEALTH_CATALOG_URL", "http://catalog:8080")   # set in docker-compose.yml
+HEALTH_CATALOG_URL  = os.getenv("HEALTH_CATALOG_URL", "http://Catalog:8080")   # set in docker-compose.yml
 THINGSPEAK_API_URL  = "https://api.thingspeak.com/update.json"
 REST_PORT           = 5004
 WRITE_INTERVAL_SEC  = 15   # ThingSpeak free-tier minimum interval
@@ -72,14 +72,14 @@ FIELD_MAP = {
 
 # Node-RED Clinician Portal — HTTP-In endpoint that receives confirmed writes.
 # Node-RED exposes this via an "http in" node at POST /thingspeak/update
-NODERED_URL = "http://clinician_portal:1880/thingspeak/update"
+NODERED_URL = "http://clinician-portal:1880/thingspeak/update"
 
 # Telegram Bot API — the patient bot exposes a REST endpoint that the forwarder
 # POSTs to so the patient receives a message after every confirmed ThingSpeak write.
 # The patient_bot service reads TELEGRAM_TOKEN from its own env; we call its
 # internal REST API rather than hitting the Telegram cloud directly, keeping all
 # Telegram credential management in one place.
-PATIENT_BOT_URL = "http://patient_bot:5005/notify"
+PATIENT_BOT_URL = "http://patient_contoll_telegram:5005/notify"
 
 # ─── Shared state ─────────────────────────────────────────────────────────────
 # Per-patient channel config: {patient_id: {"channel_id": str, "write_api_key": str}}
