@@ -14,7 +14,7 @@
 #   patient_bot           – Telegram bot patient interface
 ###############################################################################
 
-version: '3.9'
+#version: '3.9'
 
 services:
   mqtt-broker:
@@ -88,7 +88,7 @@ services:
 
   reminder:
     build: .
-    command: python time_based_alert.py
+    command: python reminder.py
     container_name: reminder
     volumes:
       - ./database.json:/app/database.json:ro
