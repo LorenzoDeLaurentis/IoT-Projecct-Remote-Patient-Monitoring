@@ -134,6 +134,11 @@ class PatientMonitoringBot:
                 # Reminder della pastiglia: messaggio con i pulsanti di risposta
                 if "Reminder for your medicine" in testo:
                     self.send_medicine_reminder(chatID, testo)
+                elif "appointment" in testo.lower():
+                    self.bot.sendMessage(chatID, testo)
+                    self.save_alert(chatID, testo)
+                    print(f"Appointmetn alert sent to {chatID}")
+                    
                 else:
                     # Disattivato per la prova: gli ALERT dei sensori non vengono mandati su Telegram (i reminder si)
                     # self.bot.sendMessage(chatID, f"ALERT: {testo}")
