@@ -63,8 +63,16 @@ class ReminderManager:
 
                     # APPOINTMENTS REMINDER
                     appt_response = requests.get(f"{self.catalog_url}/get_appointments?chatID={patient['chatID']}").json()
+                    
+                    if not isinstance(appt_response, dict):
+                        print(f"Invalid response from catalog for patient {patient['chatID']}: {appt_response!r}")
+                        continue
+                    
                     appointments = appt_response.get("appointments", [])
-                    for appointment in appointments:
+                    for appointment in appointments:#appt_response:
+                        if not isinstance(appointment, dict):
+                            print(f"Skipping invalid appointment entry for patient {patient['chatID']}: {appointment!r}")
+                            continue
                         appointment_date = appointment.get("date")
                         appointment_time = appointment.get("time")
 
@@ -86,6 +94,7 @@ class ReminderManager:
                             # convert text string ("02-08-2026") into python datetime object --> needed to subtract days from the date
                             appt_dt = datetime.strptime(str(appointment_date).strip(), "%d-%m-%Y")
                             
+                            
                         except ValueError:
                             print(f"Invalid appointment date for {patient['chatID']}: {appointment_date}")
                             continue
@@ -101,8 +110,9 @@ class ReminderManager:
                                     "chatID": patient["chatID"],
                                     "msg": f"You have an upcoming appointment TODAY with doctor {appt_response.get('doctor')}. Reason: {appointment.get('reason')}"
                                 }
+                                
                                 self.client.myPublish(topic, payload)
-                                print(f"2 days appointment alert sent to MQTT for patient {patient['chatID']}")
+                                print(f"You have an upcoming appointment TODAY with doctor {appt_response.get('doctor')}. Reason: {appointment.get('reason')}\n")
                                 self.alerted_appointments.add(appointment_key)
 
 
