@@ -1,5 +1,6 @@
 from flask import Flask, Response, render_template
 import json
+import requests
 from datetime import datetime
 from collections import OrderedDict #to keep the key order written in code equal to the one displayed
 
@@ -22,17 +23,39 @@ NOTE: JSON dictionaries don't have a guaranteed order for their keys. When Pytho
 '''
 
 
+
 # Initialize the Flask application
 # creates an istance of the flask class. This object acts as central registry for views, url and configurations
-app = Flask(__name__)
+app = Flask(__name__, template_folder='.')
 
 # when shows the output of the code, Flask order the keys in aphabetical order --> to prevent this behaviour, tell Flask to not sort in this way
 #app.config["JSON_SORT_KEYS"] = False --> DOESN'T WORK
+try:
+    conf = json.load(open("conf.json"))
+    CATALOG_URL = conf["catalog_url"]
+except Exception as e:
+    print(f"[WARNING] Can not load conf.json using catalog URL: {e}")
 
-# helper function to load data from JSON file
+
 def load_data():
-    with open("database.json", "r") as file:
-        return json.load(file) # converts contents of json file into standard python dictionary
+    try:
+        url = f"{CATALOG_URL}/patients"
+        response = requests.get(url)
+
+        if response.status_code == 200:
+            patients_data = response.json()
+
+            if isinstance(patients_data, list):
+                return {"patients": patients_data}
+            return patients_data
+
+        else:
+            print(f"[ERROR] Catalog returned status code {response.status_code}")
+            return {"patients": []}
+
+    except Exception as e:
+        print(f"[ERROR] Failed to connect to Catalog via REST: {e}")
+        return {"patients": []}
 
 
 
@@ -74,6 +97,7 @@ def get_appointments():
                 except ValueError:
                     pass
 
+            print(formatted_date)
 
             time_string = app.get("time", "00:00")
             start_datetime = f"{formatted_date}T{time_string}"
@@ -86,7 +110,7 @@ def get_appointments():
                 "reason": app.get('reason', 'Unknown'),
                 "doctor": patient.get("doctor", "Unknown"),
                 "patient_name": patient.get("name", "Unknown"),
-                "date": raw_date,
+                "date": formatted_date,
                 "time": time_string,
             }
 
@@ -106,4 +130,5 @@ def get_appointments():
 # Run the application
 # Starts the local development server. Setting debug=True means the server will automatically restart whenever you save changes to your code, and it will show detailed error messages if something goes wrong.
 if __name__ == "__main__":
-    app.run(debug=True)
+    #app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
