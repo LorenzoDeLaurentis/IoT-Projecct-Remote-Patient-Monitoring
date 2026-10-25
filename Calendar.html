@@ -20,7 +20,7 @@
 </head>
 <body>
 
-    <h2>My Appointments Calendar</h2>
+    
     <div id='calendar'></div>
 
     <script>
@@ -39,7 +39,7 @@
                 },
                 //events: '/appointments', // Automatically pulls from your Flask route
                 // Point directly to your active Flask endpoint running on your machine
-                events: 'http://127.0.0.1:5000/appointments',
+                events: 'http://localhost:5000/appointments',//'http://127.0.0.1:5000/appointments',
 
                 // Add this block to remove the 'a/p' marker and use 24-hour format
                 eventTimeFormat: {
