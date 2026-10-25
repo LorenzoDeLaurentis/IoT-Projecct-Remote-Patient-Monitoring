@@ -104,6 +104,16 @@ services:
       - catalog
     restart: unless-stopped
 
+  calendar-app:
+    build: .
+    command: python -u calendarApp.py
+    container_name: calendar-app
+    ports:
+      - "5000:5000"
+    depends_on:
+      - catalog
+    restart: unless-stopped
+
   sensor-connector:
     build: .
     command: python sensor_connector.py
