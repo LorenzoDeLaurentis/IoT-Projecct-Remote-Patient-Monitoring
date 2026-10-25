@@ -20,7 +20,8 @@
                 "account_id": "mwa0000038888119",
                 "user_api_key": "ZBM4IM7LRT0J6OTF",
                 "channels": [
-                    "3518229"
+                    "3518229",
+                    "3546491"
                 ]
             }
         },
@@ -76,7 +77,7 @@
             ],
             "appointments": [
                 {
-                    "date": "05-10-2026",
+                    "date": "22-10-2026",
                     "time": "10:00",
                     "reason": "Blood pressure check",
                     "status": "confirmed"
@@ -127,8 +128,8 @@
             "reminders": [],
             "appointments": [
                 {
-                    "date": "TBD",
-                    "time": "TBD",
+                    "date": "24-10-2026",
+                    "time": "10:30",
                     "reason": "Chest tightness after exertion",
                     "status": "pending"
                 }
@@ -138,7 +139,13 @@
             "thingspeak": {
                 "channel_id": "3543009",
                 "write_api_key": "U4NLU4QC0PSE83OB"
-            }
+            },
+            "alerts": [
+                {
+                    "message": "You have an upcoming appointment TODAY with doctor Matteo Rossi. Reason: Chest tightness after exertion",
+                    "timestamp": "24-10-2026 18:20"
+                }
+            ]
         },
         {
             "chatID": 6596242418,
@@ -168,8 +175,8 @@
             "reminders": [],
             "appointments": [
                 {
-                    "date": "TBD",
-                    "time": "TBD",
+                    "date": "28-10-2026",
+                    "time": "20:30",
                     "reason": "Palpitations at night",
                     "status": "pending"
                 }
@@ -215,8 +222,8 @@
             "reminders": [],
             "appointments": [
                 {
-                    "date": "TBD",
-                    "time": "TBD",
+                    "date": "20-10-2026",
+                    "time": "10:00",
                     "reason": "Tachycardia when I climb stairs",
                     "status": "pending"
                 }
@@ -276,8 +283,8 @@
             ],
             "appointments": [
                 {
-                    "date": "TBD",
-                    "time": "TBD",
+                    "date": "20-10-2026",
+                    "time": "9:30",
                     "reason": "Left arm pain for a few days",
                     "status": "pending"
                 }
@@ -334,6 +341,114 @@
             ],
             "notes": "Chronic kidney disease, high cardiovascular risk. Monitor blood pressure and potassium levels. Periodic ECG to check for arrhythmias. Avoid nephrotoxic drugs.",
             "visits": []
+        },
+        {
+            "chatID": 2002722046,
+            "name": "Letizia Grassi",
+            "birthdate": "28/10/2002",
+            "doctor": "Luca Bianco",
+            "sensorID": "sensor100",
+            "thresholds": {
+                "heart_rate": {
+                    "min": 60,
+                    "max": 100
+                },
+                "body_temperature": {
+                    "min": 36.0,
+                    "max": 37.5
+                },
+                "blood_pressure_systolic": {
+                    "min": 90,
+                    "max": 140
+                },
+                "blood_pressure_diastolic": {
+                    "min": 60,
+                    "max": 90
+                }
+            },
+            "reminders": [
+                {
+                    "medicine_name": "Aspirina",
+                    "time": "20:00"
+                },
+                {
+                    "medicine_name": "Tachi",
+                    "time": "11:20"
+                }
+            ],
+            "appointments": [
+                {
+                    "date": "25-10-2026",
+                    "reason": "Schiena",
+                    "time": "08:10",
+                    "status": "confirmed"
+                },
+                {
+                    "date": "26-10-2026",
+                    "reason": "Prova",
+                    "time": "11:30",
+                    "status": "confirmed"
+                }
+            ],
+            "thingspeak": {
+                "channel_id": "3546491",
+                "write_api_key": "1OZWCHZG1QKTRF5F",
+                "read_api_key": "DK8F4DIZVE5JY6PC"
+            },
+            "alerts": [
+                {
+                    "message": "Your doctor confirmed your appointment on 2026-10-24 at 10:00.",
+                    "timestamp": "22-10-2026 17:50"
+                },
+                {
+                    "message": "Your doctor confirmed your appointment on 25-10-2026 at 08:10.",
+                    "timestamp": "23-10-2026 11:08"
+                },
+                {
+                    "message": "Your doctor confirmed your appointment on 23-10-2026 at 11:30.",
+                    "timestamp": "23-10-2026 11:28"
+                },
+                {
+                    "message": "You have an upcoming appointment TODAY with doctor Luca Bianco. Reason: Schiena",
+                    "timestamp": "24-10-2026 18:20"
+                },
+                {
+                    "message": "You have an upcoming appointment in 2 days (on 26-10-2026 at 11:30) with doctor Luca Bianco. Reason: Prova",
+                    "timestamp": "24-10-2026 18:20"
+                },
+                {
+                    "message": "You have an upcoming appointment TODAY with doctor Luca Bianco. Reason: Schiena",
+                    "timestamp": "25-10-2026 11:19"
+                },
+                {
+                    "message": "You have an upcoming appointment TODAY with doctor Luca Bianco. Reason: Schiena",
+                    "timestamp": "25-10-2026 11:20"
+                },
+                {
+                    "message": "You have an upcoming appointment TODAY with doctor Luca Bianco. Reason: Schiena",
+                    "timestamp": "25-10-2026 11:22"
+                },
+                {
+                    "message": "You have an upcoming appointment TODAY with doctor Luca Bianco. Reason: Schiena",
+                    "timestamp": "25-10-2026 11:28"
+                },
+                {
+                    "message": "You have an upcoming appointment TODAY with doctor Luca Bianco. Reason: Schiena",
+                    "timestamp": "25-10-2026 11:43"
+                },
+                {
+                    "message": "You have an upcoming appointment TODAY with doctor Luca Bianco. Reason: Schiena",
+                    "timestamp": "25-10-2026 11:45"
+                },
+                {
+                    "message": "You have an upcoming appointment TODAY with doctor Luca Bianco. Reason: Schiena",
+                    "timestamp": "25-10-2026 12:01"
+                },
+                {
+                    "message": "You have an upcoming appointment TODAY with doctor Luca Bianco. Reason: Schiena",
+                    "timestamp": "25-10-2026 12:06"
+                }
+            ]
         }
     ]
 }
