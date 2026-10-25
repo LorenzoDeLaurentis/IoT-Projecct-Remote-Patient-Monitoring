@@ -53,12 +53,15 @@
                     // 'info.event.extendedProps' contains all your custom fields from Python!
                     var details = info.event.extendedProps;
 
+                    // Safely extract the date (checking extendedProps first, then falling back to event start)
+                    var appointmentDate = details && details.date ? details.date : info.event.start.toLocaleDateString();
+
                     var message = "APPOINTMENT DETAILS: \n" + 
                     "----------------------------------\n" +
                     "Patient: " + details.patient_name +"\n" +
                     "Doctor: " + details.doctor + "\n" + 
                     "Reason: " + details.reason + "\n" +
-                    "Date: " + details.date + "\n" +
+                    "Date: " + appointmentDate + "\n" +
                     "Time: " + details.time;
                     
                     alert(message);

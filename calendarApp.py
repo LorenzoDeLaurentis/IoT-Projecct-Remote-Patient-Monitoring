@@ -83,24 +83,29 @@ def get_appointments():
 
             
             raw_date = str(app.get("date", ""))
-            formatted_date = raw_date
+            y_m_d = raw_date 
+            display_date = raw_date
+            #formatted_date = raw_date
 
             try:
+                # IF INPUT IS D-M-Y
                 d_m_y_date = datetime.strptime(raw_date, "%d-%m-%Y")
-                formatted_date = d_m_y_date.strftime("%Y-%m-%d")
+                y_m_d = d_m_y_date.strftime("%Y-%m-%d")
+                display_date = d_m_y_date.strftime("%d-%m-%Y")
 
             except ValueError:
                 try:
                     # Fallback in case it's already YYYY-MM-DD
                     d_m_y_date = datetime.strptime(raw_date, "%Y-%m-%d")
-                    formatted_date = d_m_y_date.strftime("%Y-%m-%d")
+                    y_m_d = d_m_y_date.strftime("%Y-%m-%d")
+                    display_date = d_m_y_date.strftime("%d-%m-%Y")
                 except ValueError:
                     pass
 
-            print(formatted_date)
 
             time_string = app.get("time", "00:00")
-            start_datetime = f"{formatted_date}T{time_string}"
+            #raw_date = app.get("date", "")
+            start_datetime = f"{y_m_d}T{time_string}"
 
             # Format data for the frontend calendar
             # Use standard curly braces {} instead of a list of tuples []
@@ -110,7 +115,7 @@ def get_appointments():
                 "reason": app.get('reason', 'Unknown'),
                 "doctor": patient.get("doctor", "Unknown"),
                 "patient_name": patient.get("name", "Unknown"),
-                "date": formatted_date,
+                "date": display_date,
                 "time": time_string,
             }
 
